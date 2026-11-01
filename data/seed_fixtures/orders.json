@@ -1,0 +1,144 @@
+[
+  {
+    "order_id": "ORD-1042",
+    "customer_id": "CUST-501",
+    "order_date": "2026-10-25",
+    "status": "Pending",
+    "total_amount": 38000.00,
+    "shipping_address": "Gala No 12, Ground Floor, APMC Market-1, Vashi, Navi Mumbai, Maharashtra - 400703",
+    "items": [
+      {
+        "item_id": "ITEM-801",
+        "product_id": "P1001",
+        "quantity": 100,
+        "unit_price": 380.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1043",
+    "customer_id": "CUST-502",
+    "order_date": "2026-10-26",
+    "status": "Processing",
+    "total_amount": 34500.00,
+    "shipping_address": "Shop 4, Laxmi Road, Narayan Peth, Pune, Maharashtra - 411030",
+    "items": [
+      {
+        "item_id": "ITEM-802",
+        "product_id": "P1002",
+        "quantity": 10,
+        "unit_price": 1250.00
+      },
+      {
+        "item_id": "ITEM-803",
+        "product_id": "P1004",
+        "quantity": 20,
+        "unit_price": 1100.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1044",
+    "customer_id": "CUST-503",
+    "order_date": "2026-10-27",
+    "status": "Pending",
+    "total_amount": 7700.00,
+    "shipping_address": "Plot 42, MIDC Ambad Industrial Area, Nashik, Maharashtra - 422010",
+    "items": [
+      {
+        "item_id": "ITEM-804",
+        "product_id": "P1010",
+        "quantity": 25,
+        "unit_price": 260.00
+      },
+      {
+        "item_id": "ITEM-805",
+        "product_id": "P1011",
+        "quantity": 10,
+        "unit_price": 120.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1045",
+    "customer_id": "CUST-505",
+    "order_date": "2026-10-28",
+    "status": "Shipped",
+    "total_amount": 6800.00,
+    "shipping_address": "102 Bandra Station Road, Bandra West, Mumbai, Maharashtra - 400050",
+    "items": [
+      {
+        "item_id": "ITEM-806",
+        "product_id": "P1006",
+        "quantity": 50,
+        "unit_price": 80.00
+      },
+      {
+        "item_id": "ITEM-807",
+        "product_id": "P1007",
+        "quantity": 20,
+        "unit_price": 140.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1046",
+    "customer_id": "CUST-506",
+    "order_date": "2026-10-29",
+    "status": "Pending",
+    "total_amount": 8400.00,
+    "shipping_address": "Kothrud Bus Stand Road, Kothrud, Pune, Maharashtra - 411038",
+    "items": [
+      {
+        "item_id": "ITEM-808",
+        "product_id": "P1007",
+        "quantity": 30,
+        "unit_price": 140.00
+      },
+      {
+        "item_id": "ITEM-809",
+        "product_id": "P1008",
+        "quantity": 20,
+        "unit_price": 210.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1047",
+    "customer_id": "CUST-508",
+    "order_date": "2026-10-22",
+    "status": "Shipped",
+    "total_amount": 7350.00,
+    "shipping_address": "Shop 8, Teen Hath Naka, Thane West, Maharashtra - 400602",
+    "items": [
+      {
+        "item_id": "ITEM-810",
+        "product_id": "P1005",
+        "quantity": 15,
+        "unit_price": 490.00
+      }
+    ]
+  },
+  {
+    "order_id": "ORD-1048",
+    "customer_id": "CUST-509",
+    "order_date": "2026-10-30",
+    "status": "Pending",
+    "total_amount": 5500.00,
+    "shipping_address": "45 Girgaon Road, Opera House, Mumbai, Maharashtra - 400004",
+    "items": [
+      {
+        "item_id": "ITEM-811",
+        "product_id": "P1010",
+        "quantity": 15,
+        "unit_price": 260.00
+      },
+      {
+        "item_id": "ITEM-812",
+        "product_id": "P1012",
+        "quantity": 10,
+        "unit_price": 160.00
+      }
+    ]
+  }
+]

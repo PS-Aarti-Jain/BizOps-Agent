@@ -1,0 +1,122 @@
+[
+  {
+    "inventory_id": "INV-1001",
+    "product_id": "P1001",
+    "on_hand_qty": 0,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Mumbai Central WH-A"
+  },
+  {
+    "inventory_id": "INV-1002",
+    "product_id": "P1002",
+    "on_hand_qty": 5,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Mumbai Central WH-A"
+  },
+  {
+    "inventory_id": "INV-1003",
+    "product_id": "P1003",
+    "on_hand_qty": 2,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Mumbai Central WH-A"
+  },
+  {
+    "inventory_id": "INV-1004",
+    "product_id": "P1004",
+    "on_hand_qty": 8,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Pune Hinjewadi WH-B"
+  },
+  {
+    "inventory_id": "INV-1005",
+    "product_id": "P1005",
+    "on_hand_qty": 35,
+    "reserved_qty": 5,
+    "allocated_qty": 0,
+    "location": "Thane Logistics Hub WH-D"
+  },
+  {
+    "inventory_id": "INV-1006",
+    "product_id": "P1006",
+    "on_hand_qty": 200,
+    "reserved_qty": 20,
+    "allocated_qty": 0,
+    "location": "Mumbai Central WH-A"
+  },
+  {
+    "inventory_id": "INV-1007",
+    "product_id": "P1007",
+    "on_hand_qty": 25,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Pune Hinjewadi WH-B"
+  },
+  {
+    "inventory_id": "INV-1008",
+    "product_id": "P1008",
+    "on_hand_qty": 15,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Pune Hinjewadi WH-B"
+  },
+  {
+    "inventory_id": "INV-1009",
+    "product_id": "P1009",
+    "on_hand_qty": 80,
+    "reserved_qty": 10,
+    "allocated_qty": 0,
+    "location": "Nashik Ambad WH-C"
+  },
+  {
+    "inventory_id": "INV-1010",
+    "product_id": "P1010",
+    "on_hand_qty": 10,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Pune Hinjewadi WH-B"
+  },
+  {
+    "inventory_id": "INV-1011",
+    "product_id": "P1011",
+    "on_hand_qty": 100,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Mumbai Central WH-A"
+  },
+  {
+    "inventory_id": "INV-1012",
+    "product_id": "P1012",
+    "on_hand_qty": 40,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Nashik Ambad WH-C"
+  },
+  {
+    "inventory_id": "INV-1013",
+    "product_id": "P1013",
+    "on_hand_qty": 120,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Thane Logistics Hub WH-D"
+  },
+  {
+    "inventory_id": "INV-1014",
+    "product_id": "P1014",
+    "on_hand_qty": 20,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Thane Logistics Hub WH-D"
+  },
+  {
+    "inventory_id": "INV-1015",
+    "product_id": "P1015",
+    "on_hand_qty": 8,
+    "reserved_qty": 0,
+    "allocated_qty": 0,
+    "location": "Thane Logistics Hub WH-D"
+  }
+]

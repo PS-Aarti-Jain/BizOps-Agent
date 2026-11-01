@@ -1,0 +1,69 @@
+# Intent routing configuration for BizOps Agent
+shipment_investigation:
+  keywords:
+    - "ship"
+    - "why haven't"
+    - "why have not"
+    - "why hasn't"
+    - "shipped"
+    - "shipping"
+
+order_fulfillment:
+  keywords:
+    - "fulfill"
+    - "can we fulfill"
+    - "fulfillment"
+
+supplier_comparison:
+  keywords:
+    - "which supplier"
+    - "compare supplier"
+    - "compare suppliers"
+    - "cheapest supplier"
+    - "recommend a supplier"
+    - "who should we order"
+    - "procure from"
+    - "best supplier"
+
+low_stock_advice:
+  keywords:
+    - "low on"
+    - "reorder"
+    - "running low"
+    - "low stock"
+    - "inventory level"
+    - "stock level"
+
+purchase_order_creation:
+  keywords:
+    - "create purchase order"
+    - "purchase order"
+    - "create po"
+    - "place po"
+    - "new po"
+    - "buy restock"
+
+goods_receipt:
+  keywords:
+    - "receive goods"
+    - "receive po"
+    - "record receipt"
+    - "goods receipt"
+    - "receive shipment"
+    - "receive"
+
+customer_orders:
+  keywords:
+    - "order"
+    - "orders"
+    - "order history"
+
+finance_balance:
+  keywords:
+    - "balance"
+    - "credit"
+    - "hold"
+    - "overdue"
+    - "invoice"
+    - "unpaid"
+

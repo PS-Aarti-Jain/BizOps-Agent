@@ -1,0 +1,129 @@
+[
+  {
+    "po_id": "PO-7001",
+    "supplier_id": "SUP-101",
+    "status": "Fulfilled",
+    "total_amount": 125000.00,
+    "created_by": "Warehouse Manager",
+    "idempotency_key": "IDEM-SEED-7001",
+    "created_at": "2026-09-05 10:30:00",
+    "items": [
+      {
+        "item_id": "POI-7001-1",
+        "product_id": "P1001",
+        "quantity": 100,
+        "unit_price": 1250.00,
+        "subtotal": 125000.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7002",
+    "supplier_id": "SUP-101",
+    "status": "Fulfilled",
+    "total_amount": 180000.00,
+    "created_by": "Operations Manager",
+    "idempotency_key": "IDEM-SEED-7002",
+    "created_at": "2026-09-20 14:15:00",
+    "items": [
+      {
+        "item_id": "POI-7002-1",
+        "product_id": "P1002",
+        "quantity": 75,
+        "unit_price": 2400.00,
+        "subtotal": 180000.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7003",
+    "supplier_id": "SUP-101",
+    "status": "Approved",
+    "total_amount": 62500.00,
+    "created_by": "Inventory Clerk",
+    "idempotency_key": "IDEM-SEED-7003",
+    "created_at": "2026-10-18 11:00:00",
+    "items": [
+      {
+        "item_id": "POI-7003-1",
+        "product_id": "P1001",
+        "quantity": 50,
+        "unit_price": 1250.00,
+        "subtotal": 62500.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7004",
+    "supplier_id": "SUP-102",
+    "status": "Fulfilled",
+    "total_amount": 149400.00,
+    "created_by": "Warehouse Manager",
+    "idempotency_key": "IDEM-SEED-7004",
+    "created_at": "2026-09-12 16:45:00",
+    "items": [
+      {
+        "item_id": "POI-7004-1",
+        "product_id": "P1001",
+        "quantity": 120,
+        "unit_price": 1245.00,
+        "subtotal": 149400.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7005",
+    "supplier_id": "SUP-102",
+    "status": "Approved",
+    "total_amount": 74700.00,
+    "created_by": "Operations Manager",
+    "idempotency_key": "IDEM-SEED-7005",
+    "created_at": "2026-10-22 09:30:00",
+    "items": [
+      {
+        "item_id": "POI-7005-1",
+        "product_id": "P1001",
+        "quantity": 60,
+        "unit_price": 1245.00,
+        "subtotal": 74700.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7006",
+    "supplier_id": "SUP-103",
+    "status": "Fulfilled",
+    "total_amount": 100800.00,
+    "created_by": "Warehouse Manager",
+    "idempotency_key": "IDEM-SEED-7006",
+    "created_at": "2026-08-28 15:20:00",
+    "items": [
+      {
+        "item_id": "POI-7006-1",
+        "product_id": "P1001",
+        "quantity": 80,
+        "unit_price": 1260.00,
+        "subtotal": 100800.00
+      }
+    ]
+  },
+  {
+    "po_id": "PO-7007",
+    "supplier_id": "SUP-104",
+    "status": "Fulfilled",
+    "total_amount": 123500.00,
+    "created_by": "Operations Manager",
+    "idempotency_key": "IDEM-SEED-7007",
+    "created_at": "2026-09-18 13:10:00",
+    "items": [
+      {
+        "item_id": "POI-7007-1",
+        "product_id": "P1001",
+        "quantity": 100,
+        "unit_price": 1235.00,
+        "subtotal": 123500.00
+      }
+    ]
+  }
+]
+

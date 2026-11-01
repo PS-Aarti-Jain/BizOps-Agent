@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>BizOps Agent — Operations Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ── RESET & ROOT ─────────────────────────────────────────────────────────── */
+    :root {
+      --bg: #0b0f1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --surface3: #1f2d44;
+      --border: #1e2d45;
+      --border2: #243351;
+      --primary: #6d28d9;
+      --primary-light: #7c3aed;
+      --primary-glow: rgba(109, 40, 217, .25);
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #4b6080;
+      --sidebar-w: 72px;
+      --sidebar-exp: 240px;
+      --topbar-h: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    /* ── FULL-HEIGHT FLEX SHELL ───────────────────────────────────────────────── */
+    /*
+  SCROLL RULES (must hold at every level of the chain):
+  1. Every flex ANCESTOR of the scrollable element needs min-height:0
+     (flex default is min-height:auto which prevents shrinking → no scroll)
+  2. The scrollable element gets flex:1 + min-height:0 + overflow-y:auto
+  3. Never use height:100% inside flex — use flex:1 instead
+*/
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: row;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: width .3s cubic-bezier(.4, 0, .2, 1);
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    #sidebar:hover {
+      width: var(--sidebar-exp)
+    }
+
+    #sidebar:hover .nav-label {
+      opacity: 1;
+      transform: translateX(0)
+    }
+
+    #sidebar:hover .logo-text {
+      opacity: 1
+    }
+
+    .sidebar-logo {
+      height: var(--topbar-h);
+      padding: 0 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0;
+      transition: opacity .2s .1s;
+    }
+
+    .nav-items {
+      flex: 1;
+      padding: 12px 0;
+      overflow: hidden
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s;
+    }
+
+    .nav-item:hover {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(109, 40, 217, .2), transparent);
+      color: #a78bfa;
+      border-left-color: var(--primary-light);
+    }
+
+    .nav-item .nav-icon {
+      font-size: 16px;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .nav-label {
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity .2s, transform .2s
+    }
+
+    .sidebar-bottom {
+      flex-shrink: 0;
+      padding: 12px 0;
+      border-top: 1px solid var(--border)
+    }
+
+    /* ── MAIN COLUMN ─────────────────────────────────────────────────────────── */
+    /* flex:1 fills remaining width; min-height:0 is required on flex col children */
+    #main {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    /* TOP BAR — fixed height, never shrinks */
+    #topbar {
+      height: var(--topbar-h);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+    }
+
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1
+    }
+
+    .topbar-title span {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .mcp-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .mcp-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .mcp-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted)
+    }
+
+    .mcp-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success)
+    }
+
+    .mcp-dot.error {
+      background: var(--danger)
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .role-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(109, 40, 217, .25);
+      color: #a78bfa
+    }
+
+    /* ── CONTENT AREA — fills all remaining height below topbar ──────────────── */
+    /* min-height:0 CRITICAL: prevents this flex child from overflowing */
+    #content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    /* ── PANELS ──────────────────────────────────────────────────────────────── */
+    /* Each panel fills the content area completely */
+    .panel {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .panel.active {
+      display: flex
+    }
+
+    /* ── CHAT PANEL ──────────────────────────────────────────────────────────── */
+    #panel-chat {
+      flex-direction: row
+    }
+
+    .scenarios-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .scenarios-sidebar h3 {
+      flex-shrink: 0;
+      padding: 16px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #scenarios-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 12px
+    }
+
+    #scenarios-list::-webkit-scrollbar {
+      width: 5px
+    }
+
+    #scenarios-list::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    .scenario-card {
+      margin: 10px 12px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      transition: all .2s;
+    }
+
+    .scenario-card:hover {
+      border-color: var(--primary-light);
+      background: var(--surface3);
+      transform: translateY(-1px)
+    }
+
+    .scenario-card .sc-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #a78bfa;
+      margin-bottom: 4px
+    }
+
+    .scenario-card .sc-query {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4
+    }
+
+    .chat-main {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    #chat-messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #chat-messages::-webkit-scrollbar {
+      width: 6px
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    .msg {
+      display: flex;
+      gap: 12px;
+      max-width: 85%;
+      animation: fadeUp .3s ease
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      flex-direction: row-reverse
+    }
+
+    .msg-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .msg.user .msg-avatar {
+      background: linear-gradient(135deg, var(--primary), var(--accent))
+    }
+
+    .msg.agent .msg-avatar {
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      color: #a78bfa
+    }
+
+    .msg-content {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .msg.user .msg-content {
+      background: linear-gradient(135deg, var(--primary), #5b21b6);
+      border-color: transparent;
+      color: #fff;
+      border-radius: 14px 4px 14px 14px;
+    }
+
+    .msg.agent .msg-content {
+      border-radius: 4px 14px 14px 14px
+    }
+
+    .msg-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px
+    }
+
+    .msg.user .msg-meta {
+      text-align: right
+    }
+
+    .msg-content strong {
+      color: #c4b5fd
+    }
+
+    .msg-content ul,
+    .msg-content ol {
+      padding-left: 18px;
+      margin: 6px 0
+    }
+
+    .msg-content code {
+      font-size: 12px;
+      background: rgba(0, 0, 0, .3);
+      padding: 1px 5px;
+      border-radius: 4px
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0
+    }
+
+    .typing-indicator span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      animation: bounce .9s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+      animation-delay: .15s
+    }
+
+    .typing-indicator span:nth-child(3) {
+      animation-delay: .3s
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-6px)
+      }
+    }
+
+    .chat-input-area {
+      flex-shrink: 0;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .quick-chips {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap
+    }
+
+    .chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text-secondary);
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .chip:hover {
+      border-color: var(--primary-light);
+      color: #a78bfa;
+      background: rgba(109, 40, 217, .1)
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end
+    }
+
+    .input-box {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      resize: none;
+      min-height: 48px;
+      max-height: 140px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .input-box:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px var(--primary-glow)
+    }
+
+    .send-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px var(--primary-glow)
+    }
+
+    .send-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    /* ── DATA PANELS (Inventory / Orders / Finance / Suppliers) ─────────────── */
+    /*
+  .data-panel is THE scrollable container for each data view.
+  flex:1 + min-height:0 lets it fill its parent panel and activate overflow-y:auto.
+*/
+    .data-panel {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .data-panel::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .data-panel::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .panel-header h2 {
+      font-size: 20px;
+      font-weight: 700
+    }
+
+    .panel-header h2 i {
+      margin-right: 8px
+    }
+
+    .refresh-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .refresh-btn:hover {
+      border-color: var(--primary-light);
+      color: var(--text)
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      flex-shrink: 0
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 8px
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px
+    }
+
+    /* Table card */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0
+    }
+
+    .table-card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text)
+    }
+
+    tr:last-child td {
+      border-bottom: none
+    }
+
+    tr:hover td {
+      background: var(--surface2)
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .badge-green {
+      background: rgba(16, 185, 129, .15);
+      color: #34d399
+    }
+
+    .badge-yellow {
+      background: rgba(245, 158, 11, .15);
+      color: #fbbf24
+    }
+
+    .badge-red {
+      background: rgba(239, 68, 68, .15);
+      color: #f87171
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, .15);
+      color: #60a5fa
+    }
+
+    .badge-purple {
+      background: rgba(109, 40, 217, .15);
+      color: #a78bfa
+    }
+
+    .badge-gray {
+      background: var(--surface3);
+      color: var(--text-secondary)
+    }
+
+    /* Stock bar */
+    .stock-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px
+    }
+
+    .stock-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--surface3);
+      flex: 1
+    }
+
+    .stock-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .5s ease
+    }
+
+    .bar-green {
+      background: linear-gradient(90deg, var(--success), #34d399)
+    }
+
+    .bar-yellow {
+      background: linear-gradient(90deg, var(--warning), #fbbf24)
+    }
+
+    .bar-red {
+      background: linear-gradient(90deg, var(--danger), #f87171)
+    }
+
+    .stock-num {
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 28px;
+      text-align: right
+    }
+
+    /* Supplier cards */
+    .supplier-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 18px;
+      flex-shrink: 0;
+      transition: border-color .2s;
+    }
+
+    .supplier-card:hover {
+      border-color: var(--border)
+    }
+
+    .supplier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px
+    }
+
+    .supplier-name {
+      font-size: 15px;
+      font-weight: 700
+    }
+
+    .supplier-email {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px
+    }
+
+    .star-rating {
+      display: flex;
+      gap: 2px;
+      font-size: 13px;
+      color: var(--warning)
+    }
+
+    .supplier-products {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px
+    }
+
+    .sp-tag {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text-secondary);
+    }
+
+    /* Welcome card */
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(109, 40, 217, .15), rgba(59, 130, 246, .1));
+      border: 1px solid rgba(109, 40, 217, .3);
+      border-radius: 16px;
+      padding: 24px;
+      flex-shrink: 0;
+    }
+
+    .welcome-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .welcome-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none
+    }
+
+    .toast-item {
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
+      animation: slideIn .3s ease;
+      pointer-events: auto;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    .toast-item.success {
+      border-color: var(--success);
+      color: #34d399
+    }
+
+    .toast-item.error {
+      border-color: var(--danger);
+      color: #f87171
+    }
+
+    .toast-item.info {
+      border-color: var(--accent);
+      color: #60a5fa
+    }
+
+    /* Connecting overlay */
+    #connecting-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 26, .9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(6px);
+    }
+
+    .connecting-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 340px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .connecting-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px
+    }
+
+    .connecting-box p {
+      font-size: 13px;
+      color: var(--text-secondary)
+    }
+
+    /* Global scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    @media(max-width:768px) {
+      .scenarios-sidebar {
+        display: none
+      }
+
+      .mcp-badges {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Connecting Overlay -->
+  <div id="connecting-overlay">
+    <div class="connecting-box">
+      <div class="spinner"></div>
+      <h3>Starting BizOps Agent</h3>
+      <p>Connecting to MCP servers and initializing the AI agent&hellip;</p>
+      <p id="connecting-status" style="color:var(--primary-light);margin-top:12px;font-size:12px;font-weight:600"></p>
+    </div>
+  </div>
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────────────────────── -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="fas fa-robot" style="color:#fff"></i></div>
+      <span class="logo-text">BizOps Agent</span>
+    </div>
+    <div class="nav-items">
+      <div class="nav-item active" onclick="switchPanel('chat',this)">
+        <i class="fas fa-comments nav-icon"></i><span class="nav-label">AI Chat</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('inventory',this)">
+        <i class="fas fa-boxes-stacked nav-icon"></i><span class="nav-label">Inventory</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('orders',this)">
+        <i class="fas fa-receipt nav-icon"></i><span class="nav-label">Orders</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('finance',this)">
+        <i class="fas fa-circle-dollar-to-slot nav-icon"></i><span class="nav-label">Finance</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('suppliers',this)">
+        <i class="fas fa-truck-fast nav-icon"></i><span class="nav-label">Suppliers</span>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="nav-item" onclick="clearChat()">
+        <i class="fas fa-broom nav-icon"></i><span class="nav-label">Clear Chat</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <div class="topbar-title"><span id="panel-title">AI Chat</span></div>
+      <div class="mcp-badges" id="mcp-badges">
+        <div class="mcp-badge">
+          <div class="mcp-dot" id="dot-inventory"></div>Inventory
+        </div>
+        <div class="mcp-badge">
+          <div class="mcp-dot" id="dot-orders"></div>Orders
+        </div>
+        <div class="mcp-badge">
+          <div class="mcp-dot" id="dot-finance"></div>Finance
+        </div>
+        <div class="mcp-badge">
+          <div class="mcp-dot" id="dot-suppliers"></div>Suppliers
+        </div>
+      </div>
+      <div class="llm-pill" id="llm-status-pill" style="display:flex;align-items:center;gap:6px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:18px;padding:4px 12px;color:var(--text-secondary)">
+        <i class="fas fa-brain" style="color:#a78bfa"></i>
+        <span id="llm-status-label">LLM: Groq (primary)</span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">M</div>
+        <div>
+          <div style="font-size:12px;font-weight:600">USR-001</div>
+          <div class="role-badge" id="user-role-label">Manager</div>
+        </div>
+        <select id="role-select" onchange="updateRole(this.value)"
+          style="background:transparent;border:none;color:var(--text-secondary);font-size:11px;cursor:pointer;margin-left:4px">
+          <option value="Operator">Operator</option>
+          <option value="Manager" selected>Manager</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- CONTENT — fills all remaining height -->
+    <div id="content">
+
+      <!-- CHAT -->
+      <div class="panel active" id="panel-chat">
+        <div class="scenarios-sidebar">
+          <h3><i class="fas fa-flask" style="margin-right:6px"></i>Demo Scenarios</h3>
+          <div id="scenarios-list">
+            <div style="padding:30px;text-align:center;color:var(--text-muted)">
+              <i class="fas fa-spinner fa-spin" style="font-size:20px"></i>
+            </div>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div id="chat-messages">
+            <div class="welcome-card">
+              <h3>&#x1F44B; Welcome to BizOps Agent</h3>
+              <p>Ask me anything about your business operations — inventory levels, order status, financial summaries,
+                supplier comparisons, or restock recommendations. Try a demo scenario on the left!</p>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <div class="quick-chips">
+              <div class="chip" onclick="sendChip('What items are low on stock?')">
+                <i class="fas fa-triangle-exclamation" style="margin-right:4px;color:var(--warning)"></i>Low Stock Alert
+              </div>
+              <div class="chip" onclick="sendChip('Show me all pending orders')">
+                <i class="fas fa-clock" style="margin-right:4px;color:var(--accent)"></i>Pending Orders
+              </div>
+              <div class="chip" onclick="sendChip('Give me the monthly financial summary for 2026-09')">
+                <i class="fas fa-chart-line" style="margin-right:4px;color:var(--success)"></i>Finance Summary
+              </div>
+              <div class="chip" onclick="sendChip('Can we fulfill order ORD-1042?')">
+                <i class="fas fa-check-circle" style="margin-right:4px;color:#a78bfa"></i>Check Fulfillment
+              </div>
+            </div>
+            <div class="input-row">
+              <textarea class="input-box" id="chat-input" placeholder="Ask BizOps Agent anything&hellip;" rows="1"
+                onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+              <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send" disabled>
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="panel" id="panel-inventory">
+        <div class="data-panel">
+          <div class="panel-header">
+            <h2><i class="fas fa-boxes-stacked" style="color:#a78bfa"></i>Inventory</h2>
+            <button class="refresh-btn" onclick="loadInventory()"><i class="fas fa-rotate-right"></i> Refresh</button>
+          </div>
+          <div class="stats-row" id="inv-stats"></div>
+          <div class="table-card">
+            <div class="table-card-header"><i class="fas fa-table"></i> Stock Levels</div>
+            <div style="overflow-x:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>On Hand</th>
+                    <th>Reserved</th>
+                    <th>Available</th>
+                    <th>Reorder Level</th>
+                    <th>Available %</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="inv-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="panel" id="panel-orders">
+        <div class="data-panel">
+          <div class="panel-header">
+            <h2><i class="fas fa-receipt" style="color:#60a5fa"></i>Orders</h2>
+            <button class="refresh-btn" onclick="loadOrders()"><i class="fas fa-rotate-right"></i> Refresh</button>
+          </div>
+          <div class="stats-row" id="ord-stats"></div>
+          <div class="table-card">
+            <div class="table-card-header"><i class="fas fa-list"></i> Order List</div>
+            <div style="overflow-x:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Shipping</th>
+                  </tr>
+                </thead>
+                <tbody id="ord-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCE -->
+      <div class="panel" id="panel-finance">
+        <div class="data-panel">
+          <div class="panel-header">
+            <h2><i class="fas fa-circle-dollar-to-slot" style="color:#34d399"></i>Finance</h2>
+            <button class="refresh-btn" onclick="loadFinance()"><i class="fas fa-rotate-right"></i> Refresh</button>
+          </div>
+          <div class="stats-row" id="fin-stats"></div>
+          <div class="table-card">
+            <div class="table-card-header"><i class="fas fa-file-invoice-dollar"></i> Invoices</div>
+            <div style="overflow-x:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice ID</th>
+                    <th>Customer</th>
+                    <th>Invoice Date</th>
+                    <th>Due Date</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Outstanding</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="fin-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPPLIERS -->
+      <div class="panel" id="panel-suppliers">
+        <div class="data-panel">
+          <div class="panel-header">
+            <h2><i class="fas fa-truck-fast" style="color:#fbbf24"></i>Suppliers</h2>
+            <button class="refresh-btn" onclick="loadSuppliers()"><i class="fas fa-rotate-right"></i> Refresh</button>
+          </div>
+          <div class="stats-row" id="sup-stats"></div>
+          <div id="sup-list"></div>
+        </div>
+      </div>
+
+    </div><!-- /#content -->
+  </div><!-- /#main -->
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <script>
+    const panelTitles = { chat: 'AI Chat', inventory: 'Inventory', orders: 'Orders', finance: 'Finance', suppliers: 'Suppliers' };
+    let currentRole = 'Manager';
+    let isSending = false;
+    let agentReady = false;
+
+    // ── INIT ─────────────────────────────────────────────────────────────────────
+    async function init() {
+      await pollStatus();
+      loadScenarios();
+    }
+
+    async function pollStatus() {
+      const overlay = document.getElementById('connecting-overlay');
+      const statusEl = document.getElementById('connecting-status');
+      for (let i = 0; i < 60; i++) {
+        try {
+          const d = await fetch('/api/status').then(r => r.json());
+          updateMCPBadges(d.mcp_servers);
+          statusEl.textContent = Object.entries(d.mcp_servers).map(([k, v]) => k + ': ' + v).join(' · ');
+          if (d.llm_label) {
+            const llmLabel = document.getElementById('llm-status-label');
+            if (llmLabel) {
+              llmLabel.textContent = d.llm_label + (d.circuit_breaker_open ? ' [circuit open]' : '');
+            }
+          }
+          if (d.agent_ready) {
+            agentReady = true;
+            overlay.style.display = 'none';
+            document.getElementById('send-btn').disabled = false;
+            toast('BizOps Agent connected — all MCP servers online!', 'success');
+            return;
+          }
+        } catch (e) { }
+        await sleep(1500);
+      }
+      statusEl.textContent = 'Timeout — try refreshing';
+    }
+
+    function updateMCPBadges(servers) {
+      for (const [name, status] of Object.entries(servers)) {
+        const dot = document.getElementById('dot-' + name);
+        if (!dot) continue;
+        dot.className = 'mcp-dot';
+        if (status === 'connected') dot.classList.add('connected');
+        else if (status === 'error') dot.classList.add('error');
+      }
+    }
+
+    // ── NAVIGATION ───────────────────────────────────────────────────────────────
+    function switchPanel(name, el) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      el.classList.add('active');
+      document.getElementById('panel-title').textContent = panelTitles[name];
+      if (name === 'inventory') loadInventory();
+      else if (name === 'orders') loadOrders();
+      else if (name === 'finance') loadFinance();
+      else if (name === 'suppliers') loadSuppliers();
+    }
+
+    // ── ROLE ─────────────────────────────────────────────────────────────────────
+    function updateRole(val) {
+      currentRole = val;
+      document.getElementById('user-role-label').textContent = val;
+      document.getElementById('user-avatar').textContent = val[0];
+      toast('Switched to role: ' + val, 'info');
+    }
+
+    // ── CHAT ─────────────────────────────────────────────────────────────────────
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    }
+    function sendChip(q) {
+      document.getElementById('chat-input').value = q;
+      sendMessage();
+    }
+
+    function getRoleToken() {
+      const map = { Manager: 'token-manager-1', Operator: 'token-operator-1', Admin: 'token-admin-1' };
+      return map[currentRole] || 'token-manager-1';
+    }
+
+    async function sendMessage() {
+      if (isSending) return;
+      const input = document.getElementById('chat-input');
+      const query = input.value.trim();
+      if (!query) return;
+      if (!agentReady) { toast('Agent not ready yet — please wait...', 'error'); return; }
+      appendMessage('user', query);
+      input.value = ''; input.style.height = 'auto';
+      isSending = true;
+      document.getElementById('send-btn').disabled = true;
+      const typingId = appendTyping();
+      const sessionId = 'sess-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+
+      let pollTimer = setInterval(async () => {
+        try {
+          const pr = await fetch('/api/query/progress?session_id=' + encodeURIComponent(sessionId));
+          if (pr.ok) {
+            const pd = await pr.json();
+            if (pd.steps && pd.steps.length > 0) {
+              const stepEl = document.getElementById('typing-step-text');
+              if (stepEl) {
+                stepEl.textContent = pd.steps[pd.steps.length - 1];
+              }
+            }
+          }
+        } catch (e) {}
+      }, 400);
+
+      try {
+        const token = getRoleToken();
+        const r = await fetch('/api/query', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+            'X-Demo-Role': currentRole
+          },
+          body: JSON.stringify({ query: query, role: currentRole, session_id: sessionId })
+        });
+        const d = await r.json();
+
+        if (r.ok && d.status === 'ok') {
+          clearInterval(pollTimer);
+          removeTyping(typingId);
+          appendMessage('agent', d.answer, (d.elapsed_seconds ? d.elapsed_seconds + 's' : ''), d.llm_badge);
+        } else if (r.ok && d.status === 'PENDING_CONFIRMATION') {
+          clearInterval(pollTimer);
+          removeTyping(typingId);
+          appendConfirmationCard(d.action_id, d.card);
+        } else if (r.ok && d.status === 'PROCESSING') {
+          // Asynchronous polling loop for non-blocking execution
+          let pollAttempts = 0;
+          const maxPollAttempts = 240; // 240 * 500ms = 120s
+          let finished = false;
+
+          while (pollAttempts < maxPollAttempts && !finished) {
+            await sleep(500);
+            pollAttempts++;
+            try {
+              const res = await fetch('/api/query/result?session_id=' + encodeURIComponent(sessionId), {
+                headers: {
+                  'Authorization': 'Bearer ' + token,
+                  'X-Demo-Role': currentRole
+                }
+              });
+              if (res.ok) {
+                const resData = await res.json();
+                if (resData.status === 'ok') {
+                  finished = true;
+                  clearInterval(pollTimer);
+                  removeTyping(typingId);
+                  appendMessage('agent', resData.answer, (resData.elapsed_seconds ? resData.elapsed_seconds + 's' : ''), resData.llm_badge);
+                } else if (resData.status === 'PENDING_CONFIRMATION') {
+                  finished = true;
+                  clearInterval(pollTimer);
+                  removeTyping(typingId);
+                  appendConfirmationCard(resData.action_id, resData.card);
+                } else if (resData.status === 'TIMED_OUT') {
+                  finished = true;
+                  clearInterval(pollTimer);
+                  removeTyping(typingId);
+                  appendMessage('agent', resData.answer || 'Query execution timed out.', (resData.elapsed_seconds ? resData.elapsed_seconds + 's' : ''), resData.llm_badge);
+                } else if (resData.status === 'FAILED') {
+                  finished = true;
+                  clearInterval(pollTimer);
+                  removeTyping(typingId);
+                  appendMessage('agent', 'Error: ' + (resData.error || 'Execution failed.'));
+                }
+              }
+            } catch (pollErr) {
+              // Transient network glitch during polling, keep polling
+            }
+          }
+
+          if (!finished) {
+            clearInterval(pollTimer);
+            removeTyping(typingId);
+            appendMessage('agent', 'Error: Query processing timed out after 120s.');
+          }
+        } else {
+          clearInterval(pollTimer);
+          removeTyping(typingId);
+          appendMessage('agent', 'Error: ' + (d.message || d.detail || 'Unknown error'));
+        }
+      } catch (e) {
+        clearInterval(pollTimer);
+        removeTyping(typingId);
+        appendMessage('agent', 'Network error: ' + e.message);
+      }
+      isSending = false;
+      document.getElementById('send-btn').disabled = false;
+    }
+
+    function appendConfirmationCard(actionId, cardText) {
+      const c = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg agent';
+      div.id = 'confirm-card-' + actionId;
+
+      div.innerHTML = '<div class="msg-avatar">&#x1F916;</div><div>'
+        + '<div class="msg-content" style="border:1px solid #eab308;background:#1e1e2d;padding:14px;border-radius:10px">'
+        + '<div style="font-weight:700;color:#facc15;margin-bottom:8px"><i class="fas fa-shield-alt"></i> Confirmation Required (Human-in-the-Loop)</div>'
+        + '<pre style="white-space:pre-wrap;font-family:monospace;font-size:12px;background:#111827;padding:12px;border-radius:8px;color:#e5e7eb;border:1px solid #374151">'
+        + esc(cardText)
+        + '</pre>'
+        + '<div style="display:flex;gap:10px;margin-top:12px" id="btns-' + actionId + '">'
+        + '<button id="btn-approve-' + actionId + '" onclick="confirmAction(\'' + actionId + '\', true)" style="background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600"><i class="fas fa-check"></i> Approve & Execute</button>'
+        + '<button id="btn-reject-' + actionId + '" onclick="confirmAction(\'' + actionId + '\', false)" style="background:#ef4444;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600"><i class="fas fa-times"></i> Reject</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+      c.appendChild(div);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    async function confirmAction(actionId, isApproved) {
+      const token = getRoleToken();
+      const btnApprove = document.getElementById('btn-approve-' + actionId);
+      const btnReject = document.getElementById('btn-reject-' + actionId);
+      if (btnApprove) btnApprove.disabled = true;
+      if (btnReject) btnReject.disabled = true;
+
+      const btnsDiv = document.getElementById('btns-' + actionId);
+      if (btnsDiv) {
+        btnsDiv.innerHTML = isApproved
+          ? '<span style="color:#10b981;font-weight:700">&#x2714; Approved — Executing...</span>'
+          : '<span style="color:#ef4444;font-weight:700">&#x2716; Rejected — Cancelling...</span>';
+      }
+
+      const typingId = appendTyping();
+      try {
+        const r = await fetch('/api/confirm/' + actionId, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+            'X-Demo-Role': currentRole
+          },
+          body: JSON.stringify({ approve: isApproved, role: currentRole })
+        });
+        const d = await r.json();
+        removeTyping(typingId);
+        if (r.ok && d.status !== 'FAILED') {
+          appendMessage('agent', d.answer || d.message || (isApproved ? 'Action executed.' : 'Action cancelled.'));
+          if (isApproved) {
+            loadInventory();
+            loadOrders();
+          }
+        } else {
+          appendMessage('agent', 'Action failed: ' + (d.message || d.detail || 'Execution error'));
+        }
+      } catch (e) {
+        removeTyping(typingId);
+        appendMessage('agent', 'Error confirming action: ' + e.message);
+      }
+    }
+
+    function appendMessage(role, text, meta, badge) {
+      const c = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      const icon = role === 'user' ? '&#x1F464;' : '&#x1F916;';
+      const html = role === 'agent' ? fmtMd(text) : esc(text);
+      const metaHtml = (badge || meta) ? 
+        '<div class="msg-meta" style="display:flex;align-items:center;gap:8px;margin-top:4px">' 
+        + (badge ? '<span style="color:#a78bfa;font-weight:600;font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:12px;border:1px solid var(--border2)"><i class="fas fa-microchip" style="margin-right:4px"></i>' + esc(badge) + '</span>' : '')
+        + (meta ? '<span style="font-size:11px;color:var(--text-muted)"><i class="fas fa-clock" style="margin-right:3px"></i>' + esc(meta) + '</span>' : '')
+        + '</div>' : '';
+      div.innerHTML = '<div class="msg-avatar">' + icon + '</div><div>'
+        + '<div class="msg-content">' + html + '</div>'
+        + metaHtml
+        + '</div>';
+      c.appendChild(div);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function appendTyping() {
+      const id = 'typing-' + Date.now();
+      const c = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg agent'; div.id = id;
+      div.innerHTML = '<div class="msg-avatar">&#x1F916;</div><div class="msg-content">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<div class="typing-indicator"><span></span><span></span><span></span></div>'
+        + '<span id="typing-step-text" style="font-size:12px;color:var(--text-secondary);font-style:italic">Thinking...</span>'
+        + '</div></div>';
+      c.appendChild(div); c.scrollTop = c.scrollHeight;
+      return id;
+    }
+    function removeTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
+    function clearChat() {
+      const c = document.getElementById('chat-messages');
+      c.innerHTML = '<div class="welcome-card"><h3>&#x1F9F9; Chat cleared</h3><p>Ask me anything about your business operations!</p></div>';
+      toast('Chat cleared', 'info');
+    }
+
+    function fmtMd(t) {
+      return esc(t)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/^#{1,3} (.+)$/gm, '<strong style="font-size:14px;display:block;margin:8px 0 4px;color:#c4b5fd">$1</strong>')
+        .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul style="padding-left:18px;margin:6px 0">$1</ul>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+    }
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    async function loadScenarios() {
+      try {
+        const d = await fetch('/api/scenarios').then(r => r.json());
+        const list = document.getElementById('scenarios-list');
+        list.innerHTML = '';
+        (d.scenarios || []).forEach(sc => {
+          const card = document.createElement('div');
+          card.className = 'scenario-card';
+          card.innerHTML = '<div class="sc-name"><i class="fas fa-play-circle" style="margin-right:5px"></i>' + sc.name + '</div>'
+            + '<div class="sc-query">' + sc.query + '</div>';
+          card.onclick = () => sendChip(sc.query);
+          list.appendChild(card);
+        });
+      } catch (e) { }
+    }
+
+    // ── INVENTORY ─────────────────────────────────────────────────────────────────
+    async function loadInventory() {
+      try {
+        const d = await fetch('/api/data/inventory').then(r => r.json());
+        const rows = d.data || [];
+        const outOfStock = rows.filter(r => r.classification === 'OUT_OF_STOCK').length;
+        const lowStock = rows.filter(r => r.classification === 'LOW_STOCK').length;
+        const inStock = rows.filter(r => r.classification === 'IN_STOCK').length;
+        const val = rows.reduce((s, r) => s + (r.available_qty * (r.unit_cost || 0)), 0);
+        document.getElementById('inv-stats').innerHTML =
+          statCard('Total Products', rows.length) +
+          statCard('In Stock', inStock, 'var(--success)') +
+          statCard('Low Stock', lowStock, 'var(--warning)', 'Need reorder') +
+          statCard('Out of Stock', outOfStock, 'var(--danger)', 'Zero stock') +
+          statCard('Inventory Value', '₹' + Math.round(val).toLocaleString('en-IN'));
+        const tbody = document.getElementById('inv-tbody');
+        tbody.innerHTML = '';
+        rows.forEach(r => {
+          const pct = typeof r.available_pct === 'number'
+            ? r.available_pct
+            : (r.on_hand_qty > 0 ? Math.round((r.available_qty / r.on_hand_qty) * 100) : 0);
+          const bc = pct > 50 ? 'bar-green' : pct > 20 ? 'bar-yellow' : 'bar-red';
+          const col = bc === 'bar-red' ? 'var(--danger)' : bc === 'bar-yellow' ? 'var(--warning)' : 'var(--success)';
+          
+          let statusBadge = '';
+          let availColor = 'var(--success)';
+          if (r.classification === 'OUT_OF_STOCK') {
+            statusBadge = '<span class="badge badge-red"><i class="fas fa-circle-xmark"></i> OUT OF STOCK</span>';
+            availColor = 'var(--danger)';
+          } else if (r.classification === 'LOW_STOCK') {
+            statusBadge = '<span class="badge badge-yellow"><i class="fas fa-triangle-exclamation"></i> LOW STOCK</span>';
+            availColor = 'var(--warning)';
+          } else {
+            statusBadge = '<span class="badge badge-green"><i class="fas fa-check"></i> IN STOCK</span>';
+            availColor = 'var(--success)';
+          }
+
+          const reservedVal = r.total_reserved_qty != null ? r.total_reserved_qty : (r.reserved_qty || 0);
+          const reorderVal = r.reorder_threshold != null ? r.reorder_threshold : 'N/A';
+
+          tbody.innerHTML += '<tr>'
+            + '<td><strong>' + r.product_name + '</strong></td>'
+            + '<td><code style="font-size:11px;color:var(--text-muted)">' + r.sku + '</code></td>'
+            + '<td><span class="badge badge-blue">' + (r.category || 'General') + '</span></td>'
+            + '<td>' + r.on_hand_qty + '</td>'
+            + '<td>' + reservedVal + '</td>'
+            + '<td><strong style="color:' + availColor + '">' + r.available_qty + '</strong></td>'
+            + '<td>' + reorderVal + '</td>'
+            + '<td><div class="stock-bar-wrap" title="Available / On Hand %"><div class="stock-bar"><div class="stock-bar-fill ' + bc + '" style="width:' + pct + '%"></div></div>'
+            + '<span class="stock-num" style="color:' + col + '">' + Math.round(pct) + '%</span></div></td>'
+            + '<td style="font-size:12px;color:var(--text-secondary)">' + r.location + '</td>'
+            + '<td>' + statusBadge + '</td>'
+            + '</tr>';
+        });
+      } catch (e) { toast('Failed to load inventory', 'error'); }
+    }
+
+    // ── ORDERS ────────────────────────────────────────────────────────────────────
+    async function loadOrders() {
+      try {
+        const d = await fetch('/api/data/orders').then(r => r.json());
+        const rows = d.data || [];
+        const pendingRows = rows.filter(o => o.status === 'Pending');
+        const processingRows = rows.filter(o => o.status === 'Processing');
+        const pending = pendingRows.length;
+        const processing = processingRows.length;
+        const pendingTotal = pendingRows.reduce((s, o) => s + (o.total_amount || 0), 0);
+        const processingTotal = processingRows.reduce((s, o) => s + (o.total_amount || 0), 0);
+        const activeTotal = pendingTotal + processingTotal;
+        document.getElementById('ord-stats').innerHTML =
+          statCard('Total Orders', rows.length) +
+          statCard('Pending (₹' + pendingTotal.toLocaleString('en-IN') + ')', pending, 'var(--warning)') +
+          statCard('Processing (₹' + processingTotal.toLocaleString('en-IN') + ')', processing, 'var(--accent)') +
+          statCard('Active Order Value', '₹' + activeTotal.toLocaleString('en-IN'), 'var(--success)');
+        const tbody = document.getElementById('ord-tbody');
+        tbody.innerHTML = '';
+        const sm = { Pending: 'badge-yellow', Processing: 'badge-blue', Shipped: 'badge-green', Delivered: 'badge-green', Cancelled: 'badge-red' };
+        rows.forEach(o => {
+          const ic = (o.items || []).length;
+          tbody.innerHTML += '<tr>'
+            + '<td><strong style="color:#a78bfa">' + o.order_id + '</strong></td>'
+            + '<td style="font-size:12px;color:var(--text-secondary)">' + o.customer_id + '</td>'
+            + '<td style="font-size:12px">' + o.order_date + '</td>'
+            + '<td><span class="badge badge-purple">' + ic + ' item' + (ic !== 1 ? 's' : '') + '</span></td>'
+            + '<td><strong>₹' + (o.total_amount || 0).toLocaleString() + '</strong></td>'
+            + '<td><span class="badge ' + (sm[o.status] || 'badge-gray') + '">' + o.status + '</span></td>'
+            + '<td style="font-size:11px;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (o.shipping_address || '-') + '</td>'
+            + '</tr>';
+        });
+      } catch (e) { toast('Failed to load orders', 'error'); }
+    }
+
+    // ── FINANCE ───────────────────────────────────────────────────────────────────
+    async function loadFinance() {
+      try {
+        const d = await fetch('/api/data/finance').then(r => r.json());
+        const rows = d.data || [];
+        const billed = rows.reduce((s, i) => s + (i.total_amount || 0), 0);
+        const paid = rows.reduce((s, i) => s + (i.paid_amount || 0), 0);
+        const overdue = rows.filter(i => i.status === 'Overdue').length;
+        document.getElementById('fin-stats').innerHTML =
+          statCard('Total Billed', '₹' + billed.toLocaleString('en-IN')) +
+          statCard('Collected', '₹' + paid.toLocaleString('en-IN'), 'var(--success)') +
+          statCard('Outstanding', '₹' + (billed - paid).toLocaleString('en-IN'), 'var(--warning)') +
+          statCard('Overdue', overdue, 'var(--danger)');
+        const tbody = document.getElementById('fin-tbody');
+        tbody.innerHTML = '';
+        const sm = { Paid: 'badge-green', Overdue: 'badge-red', Partial: 'badge-yellow', Pending: 'badge-blue' };
+        rows.forEach(inv => {
+          tbody.innerHTML += '<tr>'
+            + '<td><strong style="color:#34d399">' + inv.invoice_id + '</strong></td>'
+            + '<td>' + (inv.customer_name || inv.customer_id) + '</td>'
+            + '<td style="font-size:12px">' + inv.invoice_date + '</td>'
+            + '<td style="font-size:12px;color:' + (inv.status === 'Overdue' ? 'var(--danger)' : 'inherit') + '">' + inv.due_date + '</td>'
+            + '<td><strong>₹' + (inv.total_amount || 0).toLocaleString() + '</strong></td>'
+            + '<td style="color:var(--success)">₹' + (inv.paid_amount || 0).toLocaleString() + '</td>'
+            + '<td style="color:' + (inv.outstanding > 0 ? 'var(--warning)' : 'var(--success)') + '"><strong>₹' + (inv.outstanding || 0).toLocaleString() + '</strong></td>'
+            + '<td><span class="badge ' + (sm[inv.status] || 'badge-gray') + '">' + inv.status + '</span></td>'
+            + '</tr>';
+        });
+      } catch (e) { toast('Failed to load finance', 'error'); }
+    }
+
+    // ── SUPPLIERS ─────────────────────────────────────────────────────────────────
+    async function loadSuppliers() {
+      try {
+        const d = await fetch('/api/data/suppliers').then(r => r.json());
+        const rows = d.data || [];
+        const avgRating = rows.length ? (rows.reduce((s, r) => s + r.rating, 0) / rows.length).toFixed(1) : 0;
+        document.getElementById('sup-stats').innerHTML =
+          statCard('Total Suppliers', rows.length) +
+          statCard('Avg Rating', avgRating + ' ⭐', 'var(--warning)');
+        const list = document.getElementById('sup-list');
+        list.innerHTML = '';
+        rows.forEach(s => {
+          const stars = '★'.repeat(Math.round(s.rating)) + '☆'.repeat(5 - Math.round(s.rating));
+          const rel = Math.round((s.reliability_score || 0) * 100);
+          const prods = (s.products || []).map(p =>
+            '<span class="sp-tag">' + (p.product_name || p.product_id) + ' · ₹' + p.unit_price + ' · ' + p.lead_time_days + 'd</span>'
+          ).join('');
+          list.innerHTML += '<div class="supplier-card">'
+            + '<div class="supplier-header"><div>'
+            + '<div class="supplier-name">' + s.name + '</div>'
+            + '<div class="supplier-email"><i class="fas fa-envelope" style="margin-right:4px"></i>' + s.contact_email + '</div>'
+            + '</div><div style="text-align:right">'
+            + '<div class="star-rating">' + stars + '</div>'
+            + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reliability: ' + rel + '%</div>'
+            + '</div></div>'
+            + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">'
+            + '<i class="fas fa-id-badge" style="margin-right:4px"></i>' + s.supplier_id
+            + ' · <span style="color:' + (rel >= 90 ? 'var(--success)' : rel >= 80 ? 'var(--warning)' : 'var(--danger)') + ';font-weight:600">' + rel + '% reliable</span></div>'
+            + '<div class="supplier-products">' + prods + '</div></div>';
+        });
+      } catch (e) { toast('Failed to load suppliers', 'error'); }
+    }
+
+    // ── HELPERS ───────────────────────────────────────────────────────────────────
+    function statCard(label, value, color, sub) {
+      return '<div class="stat-card">'
+        + '<div class="stat-label">' + label + '</div>'
+        + '<div class="stat-value"' + (color ? ' style="color:' + color + '"' : '') + '">' + value + '</div>'
+        + (sub ? '<div class="stat-sub">' + sub + '</div>' : '')
+        + '</div>';
+    }
+    function toast(msg, type = 'info') {
+      const c = document.getElementById('toast');
+      const el = document.createElement('div');
+      el.className = 'toast-item ' + type;
+      const icons = { success: 'fa-check-circle', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+      el.innerHTML = '<i class="fas ' + (icons[type] || 'fa-circle-info') + '" style="margin-right:8px"></i>' + msg;
+      c.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(30px)'; el.style.transition = 'all .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+    }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    init();
+  </script>
+</body>
+
+</html>

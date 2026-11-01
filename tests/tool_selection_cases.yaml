@@ -1,0 +1,73 @@
+cases:
+  - id: irrelevant_question
+    query: "What is the capital of France and how is the weather?"
+    expected_tools: []
+    forbidden_tools:
+      - "inventory.receive_goods"
+      - "suppliers.create_purchase_order"
+      - "orders.customer_orders"
+      - "finance.customer_balance"
+    max_tool_calls: 0
+    expect_clarification: true
+
+  - id: clean_fulfillable_order
+    query: "Can we fulfill order ORD-1043?"
+    expected_tools:
+      - "orders.get_order"
+      - "inventory.check_inventory"
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 3
+    expect_clarification: false
+
+  - id: shortage_order
+    query: "Can we fulfill order ORD-1044 for Apex Office Depot?"
+    expected_tools:
+      - "orders.get_order"
+      - "inventory.check_inventory"
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 3
+    expect_clarification: false
+
+  - id: credit_hold_customer
+    query: "Why haven't we shipped order ORD-1042 for ABC Retail?"
+    expected_tools:
+      - "orders.get_order"
+      - "finance.customer_balance"
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 4
+    expect_clarification: false
+
+  - id: ambiguous_customer
+    query: "What are the recent orders for Apex?"
+    expected_tools: []
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 0
+    expect_clarification: true
+
+  - id: unknown_customer
+    query: "Check order history for Nonexistent Phantom Customer XYZ"
+    expected_tools: []
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 0
+    expect_clarification: true
+
+  - id: tool_server_timeout
+    query: "Can we fulfill order ORD-1043?"
+    expected_tools:
+      - "orders.get_order"
+    forbidden_tools:
+      - "suppliers.create_purchase_order"
+      - "inventory.receive_goods"
+    max_tool_calls: 2
+    expect_clarification: false
+    expect_timeout: true

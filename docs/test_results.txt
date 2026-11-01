@@ -1,0 +1,28 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.14, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\ArtiJain\Documents\L2 Project\BizOps Agent
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.14.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, default_fixture_loop_scope=function
+collected 84 items
+
+tests/test_agent_react.py ............                                   [ 14%]
+tests/test_course_additions.py ....                                      [ 19%]
+tests/test_fixes_and_improvements.py ..............                      [ 35%]
+tests/test_mocked_ollama_react.py ....                                   [ 40%]
+tests/test_no_hardcoding.py ....                                         [ 45%]
+tests/test_ollama.py ......                                              [ 52%]
+tests/test_reflection_and_timeout.py ...                                 [ 55%]
+tests/test_safety_gateway.py ..                                          [ 58%]
+tests/test_security.py ..                                                [ 60%]
+tests/test_tool_selection.py ..............                              [ 77%]
+tests/test_typed_validation.py ....                                      [ 82%]
+tests/test_unit_domain.py .....                                          [ 88%]
+tests/test_web_ui_security.py .......                                    [ 96%]
+tests/test_write_tools_and_safety.py ...                                 [100%]
+
+============================== warnings summary ===============================
+fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+======================== 84 passed, 1 warning in 256.96s =======================
+

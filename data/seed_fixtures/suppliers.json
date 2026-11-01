@@ -1,0 +1,277 @@
+[
+  {
+    "supplier_id": "SUP-101",
+    "name": "Mumbai Packaging Solutions",
+    "contact_email": "orders@mumbaipackaging.in",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "gstin": "27AABCM1010A1Z5",
+    "payment_terms": "Net 30",
+    "rating": 4.8,
+    "reliability_score": 0.96,
+    "products": [
+      {
+        "id": "SP-1013-A",
+        "product_id": "P1013",
+        "unit_price": 330.00,
+        "available_qty": 1000,
+        "lead_time_days": 2,
+        "min_order_qty": 25
+      },
+      {
+        "id": "SP-1014-A",
+        "product_id": "P1014",
+        "unit_price": 42.00,
+        "available_qty": 500,
+        "lead_time_days": 2,
+        "min_order_qty": 20
+      },
+      {
+        "id": "SP-1015-A",
+        "product_id": "P1015",
+        "unit_price": 395.00,
+        "available_qty": 200,
+        "lead_time_days": 3,
+        "min_order_qty": 5
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-102",
+    "name": "Pune Electronics Distributors",
+    "contact_email": "sales@puneelectronics.in",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "gstin": "27AAECP1020B1Z7",
+    "payment_terms": "Net 30",
+    "rating": 4.9,
+    "reliability_score": 0.98,
+    "products": [
+      {
+        "id": "SP-1001-A",
+        "product_id": "P1001",
+        "unit_price": 245.00,
+        "available_qty": 500,
+        "lead_time_days": 3,
+        "min_order_qty": 50
+      },
+      {
+        "id": "SP-1002-A",
+        "product_id": "P1002",
+        "unit_price": 780.00,
+        "available_qty": 200,
+        "lead_time_days": 4,
+        "min_order_qty": 10
+      },
+      {
+        "id": "SP-1004-A",
+        "product_id": "P1004",
+        "unit_price": 680.00,
+        "available_qty": 150,
+        "lead_time_days": 3,
+        "min_order_qty": 10
+      },
+      {
+        "id": "SP-1005-A",
+        "product_id": "P1005",
+        "unit_price": 290.00,
+        "available_qty": 300,
+        "lead_time_days": 2,
+        "min_order_qty": 20
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-103",
+    "name": "Nashik Wholesale Mart",
+    "contact_email": "supplies@nashikwholesale.in",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "gstin": "27AAGCN1030C1Z9",
+    "payment_terms": "Net 15",
+    "rating": 4.3,
+    "reliability_score": 0.89,
+    "products": [
+      {
+        "id": "SP-1001-B",
+        "product_id": "P1001",
+        "unit_price": 260.00,
+        "available_qty": 150,
+        "lead_time_days": 6,
+        "min_order_qty": 20
+      },
+      {
+        "id": "SP-1010-A",
+        "product_id": "P1010",
+        "unit_price": 185.00,
+        "available_qty": 800,
+        "lead_time_days": 4,
+        "min_order_qty": 50
+      },
+      {
+        "id": "SP-1011-A",
+        "product_id": "P1011",
+        "unit_price": 72.00,
+        "available_qty": 500,
+        "lead_time_days": 3,
+        "min_order_qty": 25
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-104",
+    "name": "Gujarat Industrial Supplies",
+    "contact_email": "b2b@gujaratindustrial.in",
+    "city": "Surat",
+    "state": "Gujarat",
+    "gstin": "24AAACG1040D1ZT",
+    "payment_terms": "Advance/Net 30",
+    "rating": 4.5,
+    "reliability_score": 0.92,
+    "products": [
+      {
+        "id": "SP-1001-C",
+        "product_id": "P1001",
+        "unit_price": 235.00,
+        "available_qty": 1000,
+        "lead_time_days": 7,
+        "min_order_qty": 100
+      },
+      {
+        "id": "SP-1003-A",
+        "product_id": "P1003",
+        "unit_price": 5900.00,
+        "available_qty": 50,
+        "lead_time_days": 6,
+        "min_order_qty": 5
+      },
+      {
+        "id": "SP-1013-B",
+        "product_id": "P1013",
+        "unit_price": 310.00,
+        "available_qty": 2000,
+        "lead_time_days": 5,
+        "min_order_qty": 100
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-105",
+    "name": "Bharat Office Products",
+    "contact_email": "sales@bharatoffice.in",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "gstin": "27AAICB1050E1ZB",
+    "payment_terms": "Net 30",
+    "rating": 4.7,
+    "reliability_score": 0.95,
+    "products": [
+      {
+        "id": "SP-1010-B",
+        "product_id": "P1010",
+        "unit_price": 175.00,
+        "available_qty": 1500,
+        "lead_time_days": 2,
+        "min_order_qty": 25
+      },
+      {
+        "id": "SP-1011-B",
+        "product_id": "P1011",
+        "unit_price": 70.00,
+        "available_qty": 600,
+        "lead_time_days": 2,
+        "min_order_qty": 20
+      },
+      {
+        "id": "SP-1012-A",
+        "product_id": "P1012",
+        "unit_price": 98.00,
+        "available_qty": 400,
+        "lead_time_days": 3,
+        "min_order_qty": 10
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-106",
+    "name": "Maharashtra FMCG Distributors",
+    "contact_email": "orders@maharashtrafmcg.in",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "gstin": "27AAJCM1060F1ZD",
+    "payment_terms": "Net 15",
+    "rating": 4.8,
+    "reliability_score": 0.96,
+    "products": [
+      {
+        "id": "SP-1006-A",
+        "product_id": "P1006",
+        "unit_price": 58.00,
+        "available_qty": 2000,
+        "lead_time_days": 2,
+        "min_order_qty": 50
+      },
+      {
+        "id": "SP-1007-A",
+        "product_id": "P1007",
+        "unit_price": 108.00,
+        "available_qty": 1200,
+        "lead_time_days": 2,
+        "min_order_qty": 30
+      },
+      {
+        "id": "SP-1008-A",
+        "product_id": "P1008",
+        "unit_price": 145.00,
+        "available_qty": 800,
+        "lead_time_days": 3,
+        "min_order_qty": 20
+      },
+      {
+        "id": "SP-1009-A",
+        "product_id": "P1009",
+        "unit_price": 78.00,
+        "available_qty": 1500,
+        "lead_time_days": 2,
+        "min_order_qty": 40
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-107",
+    "name": "Western Packaging Traders",
+    "contact_email": "info@westernpackaging-thane.in",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "gstin": "27AAKCW1070G1ZF",
+    "payment_terms": "Net 30",
+    "rating": 4.2,
+    "reliability_score": 0.85,
+    "products": [
+      {
+        "id": "SP-1013-C",
+        "product_id": "P1013",
+        "unit_price": 345.00,
+        "available_qty": 500,
+        "lead_time_days": 4,
+        "min_order_qty": 20
+      },
+      {
+        "id": "SP-1014-B",
+        "product_id": "P1014",
+        "unit_price": 40.00,
+        "available_qty": 800,
+        "lead_time_days": 3,
+        "min_order_qty": 30
+      },
+      {
+        "id": "SP-1015-B",
+        "product_id": "P1015",
+        "unit_price": 410.00,
+        "available_qty": 100,
+        "lead_time_days": 4,
+        "min_order_qty": 10
+      }
+    ]
+  }
+]

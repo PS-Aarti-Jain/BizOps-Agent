@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases and SQLite stores (seeded automatically by db.seed)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+*.db
+
+# Environment variables & local secrets
+.env
+.env.local
+.env.*
+!.env.example
+
+# Service account credentials & keys
+*credentials*.json
+*service-account*.json
+*.pem
+*.key
+client_secret*.json
+
+# Generated archives & export packages
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+dist/
+build/
+*.egg-info/
+exports/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+

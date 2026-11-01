@@ -1,0 +1,30 @@
+scenarios:
+  - id: scenario_1
+    name: "Order Fulfillment Check"
+    query: "Can we fulfill order ORD-1042?"
+    description: "Evaluates available inventory against customer order ORD-1042 and identifies shortages."
+
+  - id: scenario_2
+    name: "Low Stock & Procurement Advice"
+    query: "Kaunse products ka stock kam hai? Should we reorder?"
+    description: "Evaluates warehouse stock against reorder thresholds and recommends replenishment."
+
+  - id: scenario_3
+    name: "Customer Shipment Investigation"
+    query: "Why haven't we shipped Om Sai Enterprises' order?"
+    description: "Investigates orders, warehouse stock, and customer finance balance to identify operational blockers."
+
+  - id: scenario_4
+    name: "Supplier Comparison"
+    query: "We need 100 wireless mice. Which supplier should we use?"
+    description: "Compares Indian vendors deterministically by total cost, lead time, and reliability."
+
+  - id: scenario_5
+    name: "Purchase Order Creation"
+    query: "Create the purchase order for the recommended supplier for 100 wireless mice from Pune Electronics Distributors."
+    description: "Triggers Safety Gateway confirmation card, RBAC authorization, and idempotency protection."
+
+  - id: scenario_6
+    name: "Google Sheets Inventory Sync"
+    query: "Check the low-stock products and update the inventory sheet with the latest stock status."
+    description: "Retrieves low-stock items from inventory, matches Google Sheets records, and updates sheet status with Safety Gateway approval."

@@ -1,0 +1,62 @@
+[
+  {
+    "invoice_id": "INV-2001",
+    "order_id": "ORD-1042",
+    "customer_id": "CUST-501",
+    "invoice_date": "2026-09-15",
+    "due_date": "2026-10-15",
+    "total_amount": 32000.00,
+    "paid_amount": 0.00,
+    "status": "Overdue"
+  },
+  {
+    "invoice_id": "INV-2002",
+    "order_id": "ORD-1043",
+    "customer_id": "CUST-502",
+    "invoice_date": "2026-10-26",
+    "due_date": "2026-11-25",
+    "total_amount": 34500.00,
+    "paid_amount": 34500.00,
+    "status": "Paid"
+  },
+  {
+    "invoice_id": "INV-2003",
+    "order_id": "ORD-1044",
+    "customer_id": "CUST-503",
+    "invoice_date": "2026-10-27",
+    "due_date": "2026-11-12",
+    "total_amount": 7700.00,
+    "paid_amount": 0.00,
+    "status": "Unpaid"
+  },
+  {
+    "invoice_id": "INV-2004",
+    "order_id": "ORD-1045",
+    "customer_id": "CUST-505",
+    "invoice_date": "2026-10-28",
+    "due_date": "2026-11-28",
+    "total_amount": 6800.00,
+    "paid_amount": 6800.00,
+    "status": "Paid"
+  },
+  {
+    "invoice_id": "INV-2005",
+    "order_id": "ORD-1047",
+    "customer_id": "CUST-508",
+    "invoice_date": "2026-10-22",
+    "due_date": "2026-11-06",
+    "total_amount": 7350.00,
+    "paid_amount": 2350.00,
+    "status": "Partial"
+  },
+  {
+    "invoice_id": "INV-2006",
+    "order_id": "ORD-1046",
+    "customer_id": "CUST-506",
+    "invoice_date": "2026-09-20",
+    "due_date": "2026-10-20",
+    "total_amount": 45000.00,
+    "paid_amount": 0.00,
+    "status": "Overdue"
+  }
+]
