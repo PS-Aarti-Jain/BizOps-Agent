@@ -308,8 +308,16 @@ class DomainGuard:
         if memory and session_id:
             state = memory.get_state(session_id)
             if state.get("last_intent") or state.get("last_entities"):
-                # Short follow-ups like "last month", "what about the other one", "show all"
-                if any(w in q_lower for w in ["last month", "this month", "show all", "confirm", "proceed", "cancel", "yes", "no"]):
+                # Short follow-ups grounded in active session context
+                date_followup_terms = [
+                    "last month", "this month", "month before last", "previous month",
+                    "two months ago", "2 months ago", "last two months", "last 2 months",
+                    "show all", "confirm", "proceed", "cancel", "yes", "no", "sure", "go ahead",
+                    "i need all", "show them", "yes, please", "yes, show them",
+                    "september", "october", "november", "december", "january", "february",
+                    "march", "april", "may", "june", "july", "august", "same for last year"
+                ]
+                if any(w in q_lower for w in date_followup_terms):
                     return True, "Follow-up query grounded in active session context"
 
         return False, "No business indicators found"

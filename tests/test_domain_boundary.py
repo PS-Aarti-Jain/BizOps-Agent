@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from agent.domain_guard import DomainGuard, OUT_OF_DOMAIN_REJECTION
-from agent.orchestrator import BizOpsAgent
+from agent.agent import BizOpsAgent
 from app.config import DEFAULT_USER_ID, DEFAULT_USER_ROLE
 from database.repositories.repository import BizOpsRepository
 from database.seed import seed_database

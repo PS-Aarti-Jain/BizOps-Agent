@@ -14,24 +14,36 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 def smoke_check_imports():
     print("[1/3] Verifying core and domain module imports...")
     try:
-        import config
+        import app.config
         import database.connection
         import database.repositories.repository
         import database.seed
         import domain.models
-        import services.inventory_service
         import domain.entity_resolver
-        import agent.formatter
-        import agent.llm
-        import agent.memory
-        import agent.multi_agent
-        import agent.observability
-        import agent.prompts
-        import agent.reflection
-        import agent.router
-        import agent.safety_gateway
-        import agent.security
+        import domain.policy_retriever
+        import services.inventory_service
+        import services.order_service
+        import services.finance_service
+        import services.supplier_service
+        import services.date_resolver
+        import services.language_policy
+        import services.query_normalizer
         import agent.agent
+        import agent.react_loop
+        import agent.domain_guard
+        import agent.tool_selector
+        import agent.tool_validator
+        import agent.response_formatter
+        import agent.memory
+        import agent.observability
+        import agent.reflection
+        import llm.base
+        import llm.groq_client
+        import llm.prompts
+        import mcp.router
+        import security.safety_gateway
+        import security.redaction
+        import security.confirmation
         import ui.app
         print(" -> All modules successfully imported.")
     except Exception as e:
@@ -41,7 +53,7 @@ def smoke_check_imports():
 
 async def smoke_check_mcp_servers():
     print("[2/3] Connecting to 5 MCP servers and discovering capabilities...")
-    from agent.router import MCPRouterManager
+    from mcp.router import MCPRouterManager
 
     router = MCPRouterManager()
     try:

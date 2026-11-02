@@ -16,7 +16,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from config import DEFAULT_USER_ID, DEFAULT_USER_ROLE
+from app.config import DEFAULT_USER_ID, DEFAULT_USER_ROLE
 from database.seed import seed_database
 from agent.agent import BizOpsAgent
 
@@ -47,7 +47,7 @@ async def main():
     # Handle Web UI Mode
     if args.web:
         import uvicorn
-        from config import HOST, PORT
+        from app.config import HOST, PORT
         print(f"Starting BizOps Agent Web UI on http://{HOST}:{PORT}...")
         config = uvicorn.Config("ui.app:app", host=HOST, port=PORT, reload=False)
         server = uvicorn.Server(config)

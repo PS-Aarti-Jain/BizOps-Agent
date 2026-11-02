@@ -5,7 +5,7 @@ import sys
 # Relative path resolution without hardcoded absolute machine paths
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import DB_PATH
+from app.config import DB_PATH
 
 if __name__ == "__main__":
     if not DB_PATH.exists():

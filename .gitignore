@@ -3,8 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Pytest & Coverage
+# Pytest & Coverage & Linters
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
@@ -47,4 +49,5 @@ env/
 # IDE / Editor configuration
 .vscode/
 .idea/
+.DS_Store
 

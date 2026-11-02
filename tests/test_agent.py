@@ -8,7 +8,7 @@ from app.config import DEFAULT_USER_ID, DEFAULT_USER_ROLE
 from database.repositories.repository import BizOpsRepository
 from database.seed import seed_database
 from security.safety_gateway import SafetyGateway
-from agent.orchestrator import BizOpsAgent
+from agent.agent import BizOpsAgent
 
 
 @pytest.fixture(autouse=True)

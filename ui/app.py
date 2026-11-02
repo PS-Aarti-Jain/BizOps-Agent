@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from config import (
+from app.config import (
     ALLOWED_ORIGINS,
     DB_PATH,
     DEFAULT_TOKEN_USER_MAP,

@@ -55,6 +55,14 @@ class RelativeDateResolver:
         return first_day, last_day
 
     @classmethod
+    def shift_month(cls, year: int, month: int, month_delta: int) -> Tuple[int, int]:
+        """Shifts year and month by month_delta (positive or negative) with year boundary handling."""
+        total_months = year * 12 + (month - 1) + month_delta
+        new_year = total_months // 12
+        new_month = (total_months % 12) + 1
+        return new_year, new_month
+
+    @classmethod
     def resolve_date_expression(
         cls,
         expression: str,
@@ -81,7 +89,23 @@ class RelativeDateResolver:
             iso = yest.isoformat()
             return DateRangeResult(iso, iso, label="Yesterday", is_relative=True)
 
-        # 3. 'this month' / 'current month' / 'is mahine'
+        # 3. 'month before last' / 'the month before last' / 'two months ago' / '2 months ago' / 'usse pichle mahine'
+        if any(phrase in expr_clean for phrase in [
+            "month before last", "the month before last", "month before that",
+            "the month before that", "two months ago", "2 months ago", "usse pichle mahine"
+        ]):
+            m_year, m_month = cls.shift_month(today.year, today.month, -2)
+            first_day, last_day = cls.get_month_bounds(m_year, m_month)
+            month_label = first_day.strftime("%B %Y")
+            return DateRangeResult(
+                start_date=first_day.isoformat(),
+                end_date=last_day.isoformat(),
+                label=f"Month Before Last ({month_label})",
+                is_relative=True,
+                month_str=f"{m_year:04d}-{m_month:02d}",
+            )
+
+        # 4. 'this month' / 'current month' / 'is mahine'
         if any(expr_clean == phrase or phrase in expr_clean for phrase in ["this month", "current month", "is mahine", "is mahina"]):
             first_day, last_day = cls.get_month_bounds(today.year, today.month)
             return DateRangeResult(
@@ -92,23 +116,17 @@ class RelativeDateResolver:
                 month_str=f"{today.year:04d}-{today.month:02d}",
             )
 
-        # 4. 'last month' / 'previous month' / 'pichle mahine'
+        # 5. 'last month' / 'previous month' / 'pichle mahine'
         if any(expr_clean == phrase or phrase in expr_clean for phrase in ["last month", "previous month", "pichle mahine", "pichla mahina"]):
-            # Boundary: December of previous year if current month is January
-            if today.month == 1:
-                prev_year = today.year - 1
-                prev_month = 12
-            else:
-                prev_year = today.year
-                prev_month = today.month - 1
-            first_day, last_day = cls.get_month_bounds(prev_year, prev_month)
+            m_year, m_month = cls.shift_month(today.year, today.month, -1)
+            first_day, last_day = cls.get_month_bounds(m_year, m_month)
             month_label = first_day.strftime("%B %Y")
             return DateRangeResult(
                 start_date=first_day.isoformat(),
                 end_date=last_day.isoformat(),
                 label=f"Last Month ({month_label})",
                 is_relative=True,
-                month_str=f"{prev_year:04d}-{prev_month:02d}",
+                month_str=f"{m_year:04d}-{m_month:02d}",
             )
 
         # 5. 'last two months' / 'last 2 months' / 'past 2 months'
@@ -170,6 +188,29 @@ class RelativeDateResolver:
                 label=expr_clean,
                 is_relative=False,
             )
+
+        # 9. Named Month expressions (e.g. "September", "September 2026", "what about September", "for October")
+        month_names = {
+            "january": 1, "february": 2, "march": 3, "april": 4,
+            "may": 5, "june": 6, "july": 7, "august": 8,
+            "september": 9, "october": 10, "november": 11, "december": 12,
+        }
+        for m_name, m_num in month_names.items():
+            if re.search(rf"\b{m_name}\b", expr_clean):
+                y_match = re.search(r"\b(20\d\d)\b", expr_clean)
+                if y_match:
+                    target_year = int(y_match.group(1))
+                else:
+                    target_year = today.year if m_num <= today.month else today.year - 1
+                first_day, last_day = cls.get_month_bounds(target_year, m_num)
+                month_label = first_day.strftime("%B %Y")
+                return DateRangeResult(
+                    start_date=first_day.isoformat(),
+                    end_date=last_day.isoformat(),
+                    label=month_label,
+                    is_relative=True,
+                    month_str=f"{target_year:04d}-{m_num:02d}",
+                )
 
         return None
 

@@ -26,9 +26,10 @@ if hasattr(sys.stdout, "reconfigure"):
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agent.agent import BizOpsAgent
-from agent.llm import create_llm_client, LLMClient
-from agent.security import SecuritySanitizer
-from config import (
+from llm.groq_client import create_llm_client
+from llm.base import LLMClient
+from security.redaction import SecuritySanitizer
+from app.config import (
     BASE_DIR,
     DEFAULT_USER_ID,
     DEFAULT_USER_ROLE,

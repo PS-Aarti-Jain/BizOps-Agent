@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 
-from agent.security import SecuritySanitizer
+from security.redaction import SecuritySanitizer
 
 logger = logging.getLogger("BizOpsObservability")
 console = Console()

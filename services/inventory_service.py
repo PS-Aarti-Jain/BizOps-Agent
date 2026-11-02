@@ -196,6 +196,7 @@ class InventoryDomainService:
 
         return {
             "status": "SUCCESS",
+            "status_filter": "all",
             "total_count": len(items),
             "returned_count": len(items),
             "is_complete": True,
@@ -238,6 +239,7 @@ class InventoryDomainService:
         avail_items = [it for it in all_res["items"] if it["available_qty"] > 0]
         return {
             "status": "SUCCESS",
+            "status_filter": "available",
             "total_count": len(avail_items),
             "returned_count": len(avail_items),
             "is_complete": True,
@@ -250,6 +252,7 @@ class InventoryDomainService:
         oos_items = [it for it in all_res["items"] if it["classification"] == "OUT_OF_STOCK"]
         return {
             "status": "SUCCESS",
+            "status_filter": "out_of_stock",
             "total_count": len(oos_items),
             "returned_count": len(oos_items),
             "is_complete": True,
@@ -265,6 +268,7 @@ class InventoryDomainService:
         ]
         return {
             "status": "SUCCESS",
+            "status_filter": "low_stock",
             "total_count": len(low_items),
             "returned_count": len(low_items),
             "is_complete": True,

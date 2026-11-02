@@ -2,5 +2,4 @@ from services.inventory_service import InventoryDomainService
 from services.order_service import OrderDomainService
 from services.finance_service import FinanceDomainService
 from services.supplier_service import SupplierDomainService
-from services.purchase_order_service import PurchaseOrderService
 

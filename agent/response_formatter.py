@@ -5,8 +5,9 @@ from domain.entity_resolver import EntityResolutionResult
 
 
 def _matches_intent(query_lower: str, intent_name: str, fallback_keywords: List[str]) -> bool:
-    keywords = INTENTS_CONFIG.get(intent_name, {}).get("keywords", fallback_keywords)
-    return any(w.lower() in query_lower for w in keywords)
+    cfg_keywords = INTENTS_CONFIG.get(intent_name, {}).get("keywords", [])
+    all_keywords = list(set(cfg_keywords + fallback_keywords))
+    return any(w.lower() in query_lower for w in all_keywords)
 
 
 class ResponseFormatter:
@@ -407,8 +408,12 @@ class ResponseFormatter:
             if is_low:
                 evidence_lines.append(f"• Stock level is below safe operating threshold.")
         elif low_items:
-            for it in low_items:
-                evidence_lines.append(f"• {it['product_name']} ({it['product_id']}): {it['available_qty']} available vs reorder level {it['reorder_threshold']} (Location: {it.get('location')}).")
+            table_header = "| Product ID | Product Name | SKU | Available Qty | Reorder Threshold | Location |\n|---|---|---|---:|---:|---|"
+            table_rows = [
+                f"| {it.get('product_id', '')} | {it.get('product_name', '')} | {it.get('sku', '')} | {it.get('available_qty', 0)} | {it.get('reorder_threshold', 0)} | {it.get('location', 'Warehouse')} |"
+                for it in low_items
+            ]
+            evidence_lines.append(table_header + "\n" + "\n".join(table_rows))
 
         if supplier_comp and "recommendation" in supplier_comp:
             rec = supplier_comp["recommendation"]
@@ -443,11 +448,14 @@ class ResponseFormatter:
         cls, query: str, obs: Dict[str, Any], entity_res: Optional[EntityResolutionResult]
     ) -> str:
         q_low = query.lower()
-        if any(w in q_low for w in ["not available", "out of stock", "unavailable", "stock khatam", "zero stock"]):
+        data = obs.get("inventory.list_inventory") or obs.get("list_inventory") or {}
+        st_filter = data.get("status_filter")
+
+        if st_filter == "out_of_stock" or any(w in q_low for w in ["not available", "out of stock", "unavailable", "stock khatam", "zero stock"]):
             return cls._format_out_of_stock_inventory(query, obs, entity_res)
-        elif any(w in q_low for w in ["available in stock", "currently available", "in-stock items", "in stock items", "available products", "items available", "products are available"]):
+        elif st_filter == "available" or any(w in q_low for w in ["available in stock", "currently available", "in-stock items", "in stock items", "available products", "items available", "products are available"]):
             return cls._format_available_inventory(query, obs, entity_res)
-        elif any(w in q_low for w in ["low on", "reorder", "running low", "low stock", "stock kam", "almost out of stock", "need to reorder"]):
+        elif st_filter == "low_stock" or any(w in q_low for w in ["low on", "reorder", "running low", "low stock", "low-stock", "low in stock", "items low", "stock kam", "almost out of stock", "need to reorder"]):
             return cls._format_low_stock_advice(query, obs, entity_res)
         else:
             return cls._format_all_inventory(query, obs, entity_res)
