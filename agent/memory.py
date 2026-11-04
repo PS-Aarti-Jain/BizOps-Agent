@@ -315,9 +315,12 @@ class ConversationMemory:
                     f"(from {date_res.start_date} to {date_res.end_date}), "
                     f"including collected and outstanding amounts."
                 )
+                period_id = getattr(date_res, "period_id", None) or date_res.label.lower()
                 return enriched, {
                     "follow_up_type": "date_change",
-                    "period": date_res.label,
+                    "period": period_id,
+                    "period_id": period_id,
+                    "display_label": date_res.label,
                     "start_date": date_res.start_date,
                     "end_date": date_res.end_date,
                     "retained_intent": "financial_summary",
@@ -327,10 +330,13 @@ class ConversationMemory:
                 or "pending_orders" in str(last_tool)
                 or any(w in last_q for w in ["pending order", "pending orders", "orders pending", "total pending"])
             ):
+                period_id = getattr(date_res, "period_id", None) or date_res.label.lower()
                 enriched = f"How many pending orders were placed in {date_res.label} (from {date_res.start_date} to {date_res.end_date})?"
                 return enriched, {
                     "follow_up_type": "date_change",
-                    "period": date_res.label,
+                    "period": period_id,
+                    "period_id": period_id,
+                    "display_label": date_res.label,
                     "start_date": date_res.start_date,
                     "end_date": date_res.end_date,
                     "retained_intent": "pending_orders",
@@ -340,10 +346,13 @@ class ConversationMemory:
                 or "supplier" in str(last_tool)
                 or "supplier" in last_q
             ):
+                period_id = getattr(date_res, "period_id", None) or date_res.label.lower()
                 enriched = f"Show supplier performance ranking for {date_res.label} (from {date_res.start_date} to {date_res.end_date})."
                 return enriched, {
                     "follow_up_type": "date_change",
-                    "period": date_res.label,
+                    "period": period_id,
+                    "period_id": period_id,
+                    "display_label": date_res.label,
                     "start_date": date_res.start_date,
                     "end_date": date_res.end_date,
                     "retained_intent": "supplier_performance",

@@ -33,12 +33,13 @@ def restock_review_prompt(product_id: str) -> str:
 
 
 @mcp.tool()
-def get_stock(product_id: str) -> dict:
+def get_stock(product_id: str = "", product_id_or_name: str = "") -> dict:
     """Get product stock levels including on-hand, reserved, allocated, and available stock.
 
     Metadata: {"operation_type": "read", "risk_level": "none", "requires_confirmation": false, "required_role": "Operator", "idempotent": true, "domain": "inventory"}
     """
-    return service.get_stock_info(product_id)
+    pid = product_id or product_id_or_name
+    return service.get_stock_info(pid)
 
 
 @mcp.tool()

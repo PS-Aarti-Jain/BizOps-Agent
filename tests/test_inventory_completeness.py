@@ -29,6 +29,11 @@ async def create_inventory_test_agent(seed_items=True):
         # Create empty DB with schema only
         run_migrations(db_path)
 
+    old_db_path = os.environ.get("DB_PATH")
+    old_database_path = os.environ.get("DATABASE_PATH")
+    os.environ["DB_PATH"] = db_path
+    os.environ["DATABASE_PATH"] = db_path
+
     repo = BizOpsRepository(db_path=db_path)
     safety_gw = SafetyGateway(repo=repo)
     agent = BizOpsAgent(
@@ -45,6 +50,14 @@ async def create_inventory_test_agent(seed_items=True):
         yield agent, repo
     finally:
         await agent.close()
+        if old_db_path is not None:
+            os.environ["DB_PATH"] = old_db_path
+        else:
+            os.environ.pop("DB_PATH", None)
+        if old_database_path is not None:
+            os.environ["DATABASE_PATH"] = old_database_path
+        else:
+            os.environ.pop("DATABASE_PATH", None)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 

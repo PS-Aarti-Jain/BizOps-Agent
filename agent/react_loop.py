@@ -249,7 +249,7 @@ class DeterministicFallbackEngine:
             stock_tool = registry.resolve_tool_name("get_stock") or "inventory.get_stock"
             if stock_tool not in called_tools:
                 p_arg = entity_res.product.canonical_id
-                return ReActAction(action=stock_tool, args={"product_id_or_name": p_arg})
+                return ReActAction(action=stock_tool, args={"product_id": p_arg})
             return ReActAction(
                 action="final",
                 answer=ResponseFormatter.format_business_response(user_query, retrieved_data, entity_res),
@@ -342,7 +342,7 @@ class DeterministicFallbackEngine:
                 stock_tool = registry.resolve_tool_name("get_stock") or "inventory.get_stock"
 
             if stock_tool not in called_tools:
-                args = {"product_id_or_name": entity_res.product.canonical_id} if (entity_res and entity_res.product) else {"status_filter": "low_stock"}
+                args = {"product_id": entity_res.product.canonical_id} if (entity_res and entity_res.product) else {"status_filter": "low_stock"}
                 return ReActAction(action=stock_tool, args=args)
 
             # Recommend suppliers if low stock identified for a specific product

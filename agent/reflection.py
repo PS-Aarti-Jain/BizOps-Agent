@@ -8,17 +8,20 @@ logger = logging.getLogger(__name__)
 
 
 class ReflectionEngine:
-    @staticmethod
+    @classmethod
     def evaluate_task(
+        cls,
         user_query: str,
         transcript: List[Dict[str, Any]],
         proposed_answer: str,
         llm_online: bool = True,
+        grounding_result: Optional[Dict[str, Any]] = None,
     ) -> TaskEvaluation:
         """
         Multi-dimensional task success and business consistency evaluation.
         Separates tool execution, input validity, evidence sufficiency, business consistency,
         response completeness, safety compliance, and LLM availability.
+        Integrates Layer 1 deterministic numerical verification and Grounding check.
         """
         # 1. Tool Execution Status
         tool_status = "ALL_PASSED"
@@ -32,7 +35,7 @@ class ReflectionEngine:
             obs = step.get("observation", {})
             if isinstance(obs, dict):
                 st = obs.get("status")
-                if st == "SERVICE_FAILURE":
+                if st in ("SERVICE_FAILURE", "EXECUTION_ERROR", "INVALID_ARGUMENTS", "TOOL_NOT_FOUND"):
                     has_failure = True
                 elif st == "TIMEOUT":
                     has_timeout = True
@@ -50,11 +53,9 @@ class ReflectionEngine:
             args = step.get("args", {})
             for k, v in args.items():
                 if isinstance(v, str):
-                    # Flag corrupted prefixes like "t we shipped" or trailing contractions
                     if re.search(r"^(?:t\s+we\s+shipped|we\s+shipped|why\s+haven't)", v.strip(), re.IGNORECASE):
                         input_validity = "CORRUPTED_ENTITY"
                         break
-                    # Flag obvious sentence fragments passed as IDs
                     if len(v.split()) > 6 and ("id" in k or "name" in k):
                         input_validity = "CORRUPTED_ENTITY"
                         break
@@ -80,10 +81,22 @@ class ReflectionEngine:
         if missing_aspects:
             evidence_sufficiency = f"INSUFFICIENT_EVIDENCE (Missing: {', '.join(missing_aspects)})"
 
-        # 4. Business Consistency
+        # 4. Layer 1 Deterministic Verification & Grounding Check
+        layer1_check = cls.run_layer1_deterministic_check(transcript, proposed_answer, user_query)
+        has_unverified_claims = False
+        unverified_details = ""
+        if grounding_result and not grounding_result.get("is_grounded", True):
+            has_unverified_claims = True
+            unverified_details = "; ".join(grounding_result.get("reasons", ["Ungrounded entities or numbers"]))
+        elif layer1_check and layer1_check.status != "ready":
+            has_unverified_claims = True
+            unverified_details = layer1_check.reason
+
+        # 5. Business Consistency
         business_consistency = "CONSISTENT"
-        # Verify that claiming stock shortage or 0 stock is grounded in tool observations
-        if "shortage" in proposed_answer.lower() or "not fulfill" in proposed_answer.lower() or "stock is 0" in proposed_answer.lower():
+        if has_unverified_claims:
+            business_consistency = "UNVERIFIED_CLAIMS"
+        elif "shortage" in proposed_answer.lower() or "not fulfill" in proposed_answer.lower() or "stock is 0" in proposed_answer.lower():
             confirmed_shortage = False
             for step in transcript:
                 obs = step.get("observation", {})
@@ -96,8 +109,7 @@ class ReflectionEngine:
             if not confirmed_shortage and evidence_sufficiency == "COMPLETE_EVIDENCE":
                 business_consistency = "UNVERIFIED_SHORTAGE_CLAIM"
 
-        # 5. Response Completeness
-        # Flag if answer is just raw dumped JSON or technical codeblock without business synthesis
+        # 6. Response Completeness
         if proposed_answer.strip().startswith("{") and proposed_answer.strip().endswith("}"):
             response_completeness = "RAW_JSON_DUMP"
         elif "Details: {" in proposed_answer:
@@ -105,7 +117,7 @@ class ReflectionEngine:
         else:
             response_completeness = "DIRECTLY_ANSWERS_QUERY"
 
-        # 6. Safety Compliance
+        # 7. Safety Compliance
         safety_compliance = "COMPLIANT"
         for step in transcript:
             action = step.get("action", "")
@@ -114,11 +126,14 @@ class ReflectionEngine:
                 if "idempotency_key" not in args:
                     safety_compliance = "MISSING_IDEMPOTENCY_KEY"
 
-        # 7. LLM Availability
+        # 8. LLM Availability
         llm_avail = "ONLINE" if llm_online else "DEGRADED"
 
         # Overall Outcome Synthesis
-        if input_validity == "CORRUPTED_ENTITY":
+        if has_unverified_claims:
+            outcome = "FAILED"
+            details = f"Validation failed: {unverified_details}"
+        elif input_validity == "CORRUPTED_ENTITY":
             outcome = "FAILED"
             details = "Input entity parameters were corrupted or malformed during extraction."
         elif has_failure or has_timeout:

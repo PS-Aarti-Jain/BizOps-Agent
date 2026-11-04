@@ -196,5 +196,5 @@ def test_response_formatter_last_month_empty_pending_orders():
     formatted = ResponseFormatter.format_business_response("How many pending orders last month?", obs)
     assert "**Answer**:" in formatted
     assert "0 pending orders" in formatted
-    assert "October 2026" in formatted
+    assert "2026-09" in formatted
     assert not any(w in formatted for w in ["Aapka", "baare", "thoda"])

@@ -20,10 +20,13 @@ class DateRangeResult:
         label: str,
         is_relative: bool = False,
         month_str: Optional[str] = None,
+        period_id: str = "",
     ):
         self.start_date = start_date  # YYYY-MM-DD
         self.end_date = end_date      # YYYY-MM-DD
         self.label = label
+        self.display_label = label
+        self.period_id = period_id or label.lower()
         self.is_relative = is_relative
         self.month_str = month_str    # YYYY-MM if single month
 
@@ -32,6 +35,7 @@ class DateRangeResult:
             "start_date": self.start_date,
             "end_date": self.end_date,
             "label": self.label,
+            "period_id": self.period_id,
             "is_relative": self.is_relative,
         }
         if self.month_str:
@@ -81,13 +85,13 @@ class RelativeDateResolver:
         # 1. 'today' / 'aaj'
         if expr_clean in ("today", "aaj"):
             iso = today.isoformat()
-            return DateRangeResult(iso, iso, label="Today", is_relative=True)
+            return DateRangeResult(iso, iso, label="Today", is_relative=True, period_id="today")
 
         # 2. 'yesterday' / 'kal'
         if expr_clean in ("yesterday", "beeta hua kal"):
             yest = today - datetime.timedelta(days=1)
             iso = yest.isoformat()
-            return DateRangeResult(iso, iso, label="Yesterday", is_relative=True)
+            return DateRangeResult(iso, iso, label="Yesterday", is_relative=True, period_id="yesterday")
 
         # 3. 'month before last' / 'the month before last' / 'two months ago' / '2 months ago' / 'usse pichle mahine'
         if any(phrase in expr_clean for phrase in [
@@ -103,6 +107,7 @@ class RelativeDateResolver:
                 label=f"Month Before Last ({month_label})",
                 is_relative=True,
                 month_str=f"{m_year:04d}-{m_month:02d}",
+                period_id="month before last",
             )
 
         # 4. 'this month' / 'current month' / 'is mahine'
@@ -114,6 +119,7 @@ class RelativeDateResolver:
                 label=f"{today.strftime('%B %Y')}",
                 is_relative=True,
                 month_str=f"{today.year:04d}-{today.month:02d}",
+                period_id="this month",
             )
 
         # 5. 'last month' / 'previous month' / 'pichle mahine'
@@ -127,6 +133,7 @@ class RelativeDateResolver:
                 label=f"Last Month ({month_label})",
                 is_relative=True,
                 month_str=f"{m_year:04d}-{m_month:02d}",
+                period_id="last month",
             )
 
         # 5. 'last two months' / 'last 2 months' / 'past 2 months'
@@ -145,6 +152,7 @@ class RelativeDateResolver:
                 end_date=end_d.isoformat(),
                 label=f"Last Two Months ({start_d.strftime('%B %Y')} - {end_d.strftime('%B %Y')})",
                 is_relative=True,
+                period_id="last two months",
             )
 
         # 6. 'last 3 months' / 'last three months' / 'past 3 months'
@@ -162,6 +170,7 @@ class RelativeDateResolver:
                 end_date=end_d.isoformat(),
                 label=f"Last 3 Months ({start_d.strftime('%B %Y')} - {end_d.strftime('%B %Y')})",
                 is_relative=True,
+                period_id="last 3 months",
             )
 
         # 7. Explicit YYYY-MM format

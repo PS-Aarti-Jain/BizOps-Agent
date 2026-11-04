@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -72,7 +72,8 @@ async def lifespan(app: FastAPI):
         )
         if os.getenv("ENVIRONMENT") == "test":
             from unittest.mock import AsyncMock
-            _agent.ollama.is_available = AsyncMock(return_value=False)
+            if hasattr(_agent, "llm"):
+                _agent.llm.is_available = AsyncMock(return_value=False)
         await _agent.initialize()
         _agent_ready = True
         for k in _mcp_status:
@@ -83,8 +84,18 @@ async def lifespan(app: FastAPI):
         for k in _mcp_status:
             _mcp_status[k] = "error"
     yield
+    # Cancel and await any active background query jobs on server shutdown
+    pending_tasks = []
+    for job in list(_session_jobs.values()):
+        task = job.get("task")
+        if task and not task.done():
+            task.cancel()
+            pending_tasks.append(task)
+    if pending_tasks:
+        await asyncio.gather(*pending_tasks, return_exceptions=True)
     if _agent:
         await _agent.close()
+        _agent_ready = False
 
 
 app = FastAPI(title="BizOps Agent UI", lifespan=lifespan)
@@ -151,18 +162,34 @@ def get_current_user(request: Request, body_role: Optional[str] = None) -> Dict[
     1. Valid 'Authorization: Bearer <token>' header mapped from config/env.
        When a token is provided, client-supplied role parameters are strictly IGNORED.
     2. If DEMO_MODE is true and no token is passed, allows demo role dropdown/header.
-    3. If DEMO_MODE is false and no token (or invalid token) is passed, raises 401 Unauthorized.
+    3. If DEMO_MODE is false:
+       - Committed default demo tokens are strictly DISALLOWED.
+       - Only explicitly configured tokens in the TOKEN_USER_MAP env var are permitted.
+       - If no token (or invalid token) is passed, raises 401 Unauthorized.
     """
     auth_header = request.headers.get("Authorization")
-    token_map = dict(DEFAULT_TOKEN_USER_MAP)
-    env_token_map = os.getenv("TOKEN_USER_MAP")
-    if env_token_map:
-        try:
-            token_map.update(json.loads(env_token_map))
-        except Exception:
-            pass
-
     demo_mode_active = os.getenv("DEMO_MODE", str(DEMO_MODE)).lower() in ("true", "1", "yes")
+
+    if demo_mode_active:
+        token_map = dict(DEFAULT_TOKEN_USER_MAP)
+        env_token_map = os.getenv("TOKEN_USER_MAP")
+        if env_token_map:
+            try:
+                token_map.update(json.loads(env_token_map))
+            except Exception:
+                pass
+    else:
+        # NON-DEMO MODE: Strictly disallow committed demo tokens
+        token_map = {}
+        env_token_map = os.getenv("TOKEN_USER_MAP")
+        if env_token_map:
+            try:
+                parsed = json.loads(env_token_map)
+                if isinstance(parsed, dict):
+                    # Disallow any committed demo tokens from being reused
+                    token_map = {k: v for k, v in parsed.items() if k not in DEFAULT_TOKEN_USER_MAP}
+            except Exception:
+                token_map = {}
 
     if auth_header:
         if not auth_header.startswith("Bearer "):
@@ -237,20 +264,35 @@ async def get_status():
 
 
 @app.get("/api/query/progress")
-async def get_query_progress(session_id: str):
+async def get_query_progress(session_id: str, request: Request):
     """Returns live status steps and state for the active query session."""
-    steps = _session_progress.get(session_id, [])
+    current_user = get_current_user(request)
     job = _session_jobs.get(session_id)
+    demo_mode_active = os.getenv("DEMO_MODE", str(DEMO_MODE)).lower() in ("true", "1", "yes")
+
+    if job and not demo_mode_active:
+        job_user = job.get("user_id")
+        if job_user and job_user != current_user["user_id"]:
+            raise HTTPException(status_code=403, detail="Forbidden: Session belongs to another user.")
+
+    steps = _session_progress.get(session_id, [])
     status = job.get("status", "PROCESSING") if job else "PROCESSING"
     return {"session_id": session_id, "status": status, "steps": steps}
 
 
 @app.get("/api/query/result")
-async def get_query_result(session_id: str):
+async def get_query_result(session_id: str, request: Request):
     """Returns the result or current execution state of an asynchronous query job."""
+    current_user = get_current_user(request)
     job = _session_jobs.get(session_id)
     if not job:
         raise HTTPException(status_code=404, detail=f"No query job found for session '{session_id}'.")
+
+    demo_mode_active = os.getenv("DEMO_MODE", str(DEMO_MODE)).lower() in ("true", "1", "yes")
+    if not demo_mode_active:
+        job_user = job.get("user_id")
+        if job_user and job_user != current_user["user_id"]:
+            raise HTTPException(status_code=403, detail="Forbidden: Session belongs to another user.")
 
     status = job.get("status", "PROCESSING")
     res = {
@@ -275,14 +317,14 @@ async def get_query_result(session_id: str):
 
 
 @app.get("/api/data/inventory")
-async def get_inventory():
+async def get_inventory(current_user: Dict[str, str] = Depends(get_current_user)):
     service = InventoryDomainService()
     res = service.get_all_inventory_items()
     return {"status": "ok", "data": res.get("items", [])}
 
 
 @app.get("/api/data/orders")
-async def get_orders():
+async def get_orders(current_user: Dict[str, str] = Depends(get_current_user)):
     service = OrderDomainService()
     pending_res = service.get_pending_orders()
     orders = db_query("SELECT * FROM orders ORDER BY order_date DESC")
@@ -310,7 +352,7 @@ async def get_orders():
 
 
 @app.get("/api/data/finance")
-async def get_finance():
+async def get_finance(current_user: Dict[str, str] = Depends(get_current_user)):
     service = FinanceDomainService()
     oct_summary = service.get_financial_summary(month="2026-10")
     sep_summary = service.get_financial_summary(month="2026-09")
@@ -335,7 +377,7 @@ async def get_finance():
 
 
 @app.get("/api/data/suppliers")
-async def get_suppliers():
+async def get_suppliers(current_user: Dict[str, str] = Depends(get_current_user)):
     suppliers = db_query("SELECT * FROM suppliers ORDER BY rating DESC")
     prods = db_query("""
         SELECT sp.*, p.name as product_name
@@ -350,7 +392,7 @@ async def get_suppliers():
 
 
 @app.get("/api/data/purchase_orders")
-async def get_purchase_orders():
+async def get_purchase_orders(current_user: Dict[str, str] = Depends(get_current_user)):
     pos = db_query("""
         SELECT po.*, s.name as supplier_name FROM purchase_orders po
         LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id

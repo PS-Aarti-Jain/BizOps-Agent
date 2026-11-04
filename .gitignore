@@ -14,7 +14,11 @@ htmlcov/
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/*.bak
+data/*.db.bak
 *.db
+*.bak
+*.db.bak
 
 # Environment variables & local secrets
 .env

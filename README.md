@@ -352,23 +352,25 @@ Application settings are loaded from environment variables and `.env` via [`app/
 | `HOST` | `127.0.0.1` | Web server bind address |
 | `PORT` | `8080` | Web server listening port |
 | `ENVIRONMENT` | `development` | Runtime environment (`development`, `test`, `production`) |
-| `DEMO_MODE` | `true` | Enables Indian wholesale business demo indicators |
+| `DEMO_MODE` | `true` | When true, enables local demo mode. When false, enforces production bearer token authentication and session isolation |
+| `TOKEN_USER_MAP` | `""` | JSON mapping of production bearer tokens to user credentials (e.g. `{"<secret-token>": {"user_id": "USR-1", "role": "Admin"}}`) |
 | `DEVELOPER_MODE` | `false` | Shows raw observation payloads when true |
 | `GOOGLE_APPLICATION_CREDENTIALS` | `""` | Path to Google Cloud Service Account JSON (optional) |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | `""` | Target Google Spreadsheet ID (optional) |
 
-> **Security Note:** Never commit `.env` or credential files to version control. The repository `.gitignore` strictly excludes `.env`, `*.json` credentials, and local databases.
+> **Security Note:** Never commit `.env` or credential files to version control. The repository `.gitignore` strictly excludes `.env`, `*.json` credentials, `*.bak`, and local databases.
 
 ---
 
 ## 11. Security and Reliability
 
 - **Role-Based Access Control (RBAC):** Three user roles (`Operator`, `Manager`, `Admin`) enforce authorization boundaries. Read operations are available to all roles, while write tools (`create_purchase_order`, `update_record`) require `Manager` or higher.
+- **Production Non-Demo Authentication & Session Isolation:** When `DEMO_MODE=false`, hardcoded demo tokens are strictly rejected (401 Unauthorized), data endpoints (`/api/data/*`) require explicit Bearer tokens configured via `TOKEN_USER_MAP`, and query results/progress are isolated by creator user ID (403 Forbidden on unauthorized session access).
 - **Two-Phase Commit Safety Gateway:** Write operations are intercepted and converted into `PendingAction` records with cryptographic UUIDs and a 10-minute time-to-live (`PA_EXPIRATION_SECONDS=600`). No state mutation occurs without explicit confirmation.
 - **Replay Prevention:** A SHA-256 hash of the action tool and parameters is recorded to prevent duplicate order submissions or double billing.
 - **Immutable Audit Logging:** Every staging, confirmation, cancellation, and execution is written to the SQLite `audit_logs` table.
 - **Tool Argument Validation:** Pre-execution JSON Schema validation ensures arguments conform to expected data types before reaching MCP servers.
-- **Fact Grounding Validation:** [`GroundingValidator`](file:///c:/Users/ArtiJain/Documents/L2%20Project/BizOps%20Agent/agent/tool_validator.py) checks that all IDs, product codes, and numeric balances cited in the final narrative are present in observation records.
+- **Effective Fact Grounding & Reflection Gates:** [`GroundingValidator`](file:///c:/Users/ArtiJain/Documents/L2%20Project/BizOps%20Agent/agent/tool_validator.py) checks that all IDs, product codes, stock quantities, and financial numbers cited in the final narrative match tool observations. If ungrounded claims are detected, a bounded repair loop (`max_repairs=2`) re-synthesizes the answer using verified facts; if grounding still fails, a mandatory safe refusal is returned, preventing any ungrounded hallucination from reaching the user.
 - **Deterministic Business Arithmetic:** Inventory availability, debtor balances, and supplier ranking are evaluated by Python domain services with `decimal.Decimal` precision, preventing LLM arithmetic hallucination.
 
 ---
@@ -380,13 +382,14 @@ The test suite covers unit logic, MCP transport, Google Sheets mock/live paths, 
 ### Latest Verified Regression Results
 
 ```text
-======================= 134 passed, 2 deselected in 331.96s =======================
+======================= 165 passed, 2 deselected in 323.53s =======================
 ```
 
-- **Passed:** 134 automated tests
+- **Passed:** 165 automated tests
 - **Failed:** 0
 - **Deselected:** 2 tests (marked with `@pytest.mark.live_sheets`, requiring live Google Cloud service account credentials)
-- **Execution Time:** ~332 seconds
+- **Pass Rate:** 100%
+- **Execution Time:** ~324 seconds
 
 *Note: The above metrics represent the reported post-refactoring verification baseline on Python 3.13 / Windows. Execution time may vary across hardware.*
 

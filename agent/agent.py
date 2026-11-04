@@ -413,15 +413,86 @@ class BizOpsAgent:
 
         final_answer = exec_res.final_answer
 
-        # 4. Post-Execution Reflection & Grounding Validation
-        obs_map = {step["action"]: step.get("observation", {}) for step in exec_res.transcript if step.get("observation")}
-        self.last_grounding = GroundingValidator.validate_answer_grounding(final_answer, obs_map)
+        # 4. Post-Execution Reflection & Grounding Validation Gate
+        obs_map: Dict[str, Any] = {}
+        for step in exec_res.transcript:
+            act = step.get("action")
+            obs = step.get("observation")
+            if act and obs is not None:
+                obs_map[act] = obs
+                if "." in act:
+                    short_act = act.split(".", 1)[1]
+                    obs_map[short_act] = obs
+
+        self.last_grounding = GroundingValidator.validate_answer_grounding(
+            final_answer, obs_map, user_query=user_query, entity_res=entity_res
+        )
         self.last_reflection = ReflectionEngine.evaluate_task(
             user_query=user_query,
             transcript=exec_res.transcript,
             proposed_answer=final_answer,
             llm_online=not exec_res.used_fallback,
+            grounding_result=self.last_grounding,
         )
+
+        # 5. Effective Validation Gate: Bounded Repair & Safe Refusal
+        max_repairs = 2
+        repair_attempt = 0
+        is_valid = self.last_grounding.get("is_grounded", False) and self.last_reflection.outcome in ("SUCCESS", "DEGRADED")
+
+        while not is_valid and repair_attempt < max_repairs:
+            repair_attempt += 1
+            logger.warning(
+                f"Validation failed (Attempt {repair_attempt}/{max_repairs}). "
+                f"Grounding: {self.last_grounding.get('grounding_status')}, "
+                f"Reflection: {self.last_reflection.outcome}. Triggering bounded repair."
+            )
+
+            # Repair Strategy:
+            # 1. Authoritative deterministic synthesis from verified tool observations
+            repaired_answer = None
+            if obs_map and any(
+                isinstance(v, dict) and v.get("status") == "SUCCESS" for v in obs_map.values()
+            ):
+                repaired_answer = ResponseFormatter.format_business_response(
+                    user_query, obs_map, entity_res, DEVELOPER_MODE
+                )
+
+            # 2. Re-validate repaired candidate
+            if repaired_answer:
+                re_grounding = GroundingValidator.validate_answer_grounding(
+                    repaired_answer, obs_map, user_query=user_query, entity_res=entity_res
+                )
+                re_reflection = ReflectionEngine.evaluate_task(
+                    user_query=user_query,
+                    transcript=exec_res.transcript,
+                    proposed_answer=repaired_answer,
+                    llm_online=not exec_res.used_fallback,
+                    grounding_result=re_grounding,
+                )
+                if re_grounding.get("is_grounded", False) and re_reflection.outcome in ("SUCCESS", "DEGRADED"):
+                    final_answer = repaired_answer
+                    self.last_grounding = re_grounding
+                    self.last_reflection = re_reflection
+                    is_valid = True
+                    logger.info("Bounded repair successfully produced a verified, grounded answer.")
+                    break
+
+        # If validation still fails after repair attempts: Mandatory Safe Refusal
+        if not is_valid:
+            reasons = self.last_grounding.get("reasons", [])
+            if not reasons:
+                reasons = [self.last_reflection.details or "Data could not be grounded in authoritative tool observations."]
+            reasons_str = "; ".join(reasons)
+            logger.warning(f"Validation permanently failed. Executing safe refusal. Reasons: {reasons_str}")
+
+            refusal_response = (
+                f"**Answer**: I was unable to verify the operational details for this query from the authoritative system records.\n\n"
+                f"**Evidence**: The requested claims could not be substantiated by tool evidence ({reasons_str}).\n\n"
+                f"**Status**: UNVERIFIED_DATA_REFUSAL\n\n"
+                f"**Next Step**: Please verify the product/order identifiers or check the system logs."
+            )
+            final_answer = refusal_response
 
         return self._append_response_footer(final_answer, exec_res.elapsed_seconds)
 

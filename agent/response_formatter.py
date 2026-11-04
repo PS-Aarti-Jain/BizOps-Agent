@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict, List, Optional
 from app.config import INTENTS_CONFIG
 from domain.entity_resolver import EntityResolutionResult
+from services.date_resolver import get_current_date
 
 
 def _matches_intent(query_lower: str, intent_name: str, fallback_keywords: List[str]) -> bool:
@@ -386,6 +387,24 @@ class ResponseFormatter:
     def _format_low_stock_advice(
         cls, query: str, obs: Dict[str, Any], entity_res: Optional[EntityResolutionResult]
     ) -> str:
+        inv_obs = obs.get("inventory.list_inventory", {}) or obs.get("list_inventory", {})
+        get_stock_obs = obs.get("inventory.get_stock", {}) or obs.get("get_stock", {})
+        err_obs = None
+        if inv_obs.get("status") in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR"):
+            err_obs = ("inventory.list_inventory", inv_obs)
+        elif get_stock_obs.get("status") in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR"):
+            err_obs = ("inventory.get_stock", get_stock_obs)
+
+        if err_obs:
+            tool_name, o = err_obs
+            err_msg = o.get("message") or f"Tool execution failed with status {o.get('status')}"
+            return (
+                f"**Answer**: Unable to retrieve low-stock advice due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: {tool_name}\n• Status: {o.get('status')}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         stock_data = obs.get("inventory.get_stock", {}).get("data") or obs.get("get_stock", {}).get("data")
         low_items = (
             obs.get("inventory.list_inventory", {}).get("items", [])
@@ -449,13 +468,25 @@ class ResponseFormatter:
     ) -> str:
         q_low = query.lower()
         data = obs.get("inventory.list_inventory") or obs.get("list_inventory") or {}
+        status_val = data.get("status")
+
+        # Tool execution error handling (never fabricate empty inventory on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR"):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val}"
+            return (
+                f"**Answer**: Unable to retrieve inventory information due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: inventory.list_inventory\n• Status: {status_val}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         st_filter = data.get("status_filter")
 
         if st_filter == "out_of_stock" or any(w in q_low for w in ["not available", "out of stock", "unavailable", "stock khatam", "zero stock"]):
             return cls._format_out_of_stock_inventory(query, obs, entity_res)
         elif st_filter == "available" or any(w in q_low for w in ["available in stock", "currently available", "in-stock items", "in stock items", "available products", "items available", "products are available"]):
             return cls._format_available_inventory(query, obs, entity_res)
-        elif st_filter == "low_stock" or any(w in q_low for w in ["low on", "reorder", "running low", "low stock", "low-stock", "low in stock", "items low", "stock kam", "almost out of stock", "need to reorder"]):
+        elif st_filter == "low_stock" or any(w in q_low for w in ["low on", "reorder", "running low", "low stock", "low-stock", "stock kam", "almost out of stock", "need to reorder"]):
             return cls._format_low_stock_advice(query, obs, entity_res)
         else:
             return cls._format_all_inventory(query, obs, entity_res)
@@ -471,6 +502,16 @@ class ResponseFormatter:
             or obs.get("out_of_stock_items")
             or {}
         )
+        status_val = data.get("status")
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve inventory information due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: inventory.list_inventory\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         items = data.get("items", [])
         total_count = data.get("total_count", len(items))
 
@@ -508,6 +549,16 @@ class ResponseFormatter:
             or obs.get("available_items")
             or {}
         )
+        status_val = data.get("status")
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve available inventory due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: inventory.list_inventory\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         items = data.get("items", [])
         total_count = data.get("total_count", len(items))
 
@@ -544,6 +595,16 @@ class ResponseFormatter:
             or obs.get("all_inventory")
             or {}
         )
+        status_val = data.get("status")
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve inventory catalog due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: inventory.list_inventory\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         items = data.get("items", [])
         total_count = data.get("total_count", len(items))
 
@@ -577,6 +638,18 @@ class ResponseFormatter:
         cls, query: str, obs: Dict[str, Any], entity_res: Optional[EntityResolutionResult]
     ) -> str:
         data = obs.get("suppliers.supplier_performance") or obs.get("supplier_performance") or {}
+        status_val = data.get("status")
+
+        # Tool execution error handling (never fabricate missing suppliers on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve supplier performance due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: suppliers.supplier_performance\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         period = data.get("period", "All Time")
         suppliers = data.get("suppliers", [])
         top_spend = data.get("biggest_supplier_by_spend")
@@ -628,6 +701,18 @@ class ResponseFormatter:
             or obs.get("pending_payments")
             or {}
         )
+        status_val = data.get("status")
+
+        # Tool execution error handling (never fabricate 0 unpaid invoices on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve payment status due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: finance.get_payment_status\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         debtors = data.get("debtors", [])
         total_out = data.get("total_outstanding_amount", 0.0)
         total_overdue = data.get("total_overdue_amount", 0.0)
@@ -676,6 +761,18 @@ class ResponseFormatter:
             or obs.get("monthly_financial_summary")
             or {}
         )
+        status_val = data.get("status")
+
+        # Tool execution error handling (never fabricate 0 revenue on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not data and obs):
+            err_msg = data.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve financial summary due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: finance.financial_summary\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         period = data.get("period") or data.get("month") or "Current Month"
         inv_tot = data.get("total_invoiced", 0.0)
         coll_tot = data.get("total_collected", 0.0)
@@ -812,6 +909,29 @@ class ResponseFormatter:
         cls, query: str, obs: Dict[str, Any], entity_res: Optional[EntityResolutionResult]
     ) -> str:
         stock_obs = obs.get("inventory.get_stock", {}) or obs.get("get_stock", {})
+        status_val = stock_obs.get("status")
+
+        # 1. Tool execution error handling (never manufacture 0 stock on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR"):
+            err_msg = stock_obs.get("message") or f"Tool execution failed with status {status_val}"
+            return (
+                f"**Answer**: Unable to retrieve stock information due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: inventory.get_stock\n• Status: {status_val}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
+        # 2. Product not found handling (never manufacture 0 stock for missing product)
+        if status_val == "NO_DATA" or not stock_obs.get("data"):
+            p_label = (entity_res.product.canonical_name if entity_res and entity_res.product else None) or query
+            msg = stock_obs.get("message") or f"No product or inventory record found for '{p_label}'"
+            return (
+                f"**Answer**: Product could not be found: {msg}.\n\n"
+                f"**Evidence**:\n• Query: {p_label}\n• Status: NO_DATA\n• Message: {msg}\n\n"
+                f"**Status**: PRODUCT_NOT_FOUND\n\n"
+                f"**Next Step**: Please verify the product name or ID against the product catalog."
+            )
+
         data = stock_obs.get("data", {})
         p_name = data.get("product_name") or (entity_res.product.canonical_name if entity_res and entity_res.product else "Requested Product")
         p_id = data.get("product_id") or "N/A"
@@ -868,6 +988,18 @@ class ResponseFormatter:
         entity_res: Optional[EntityResolutionResult] = None,
     ) -> str:
         obs = observations.get("orders.pending_orders") or observations.get("pending_orders", {})
+        status_val = obs.get("status")
+
+        # Tool execution error handling (never fabricate 0 pending orders on tool failure)
+        if status_val in ("SERVICE_FAILURE", "EXECUTION_ERROR", "TIMEOUT", "INVALID_ARGUMENTS", "INVALID_REQUEST", "ERROR") or (not obs and observations):
+            err_msg = obs.get("message") or f"Tool execution failed with status {status_val or 'UNKNOWN'}"
+            return (
+                f"**Answer**: Unable to retrieve pending orders due to a tool execution error: {err_msg}\n\n"
+                f"**Evidence**:\n• Tool: orders.pending_orders\n• Status: {status_val or 'TOOL_EXECUTION_ERROR'}\n• Error Details: {err_msg}\n\n"
+                f"**Status**: TOOL_EXECUTION_ERROR\n\n"
+                f"**Next Step**: Please check service availability and verify the tool parameters."
+            )
+
         count = obs.get("count", 0)
         orders = obs.get("orders", [])
         month = obs.get("month")
@@ -887,8 +1019,6 @@ class ResponseFormatter:
 
         if count == 0:
             ans = f"There were 0 pending orders{period_desc}."
-            if "last month" in q_lower or "last maonth" in q_lower:
-                ans += " All current active pending orders were placed in the current month (October 2026)."
             ev = f"- Verified database query returned 0 pending or processing orders{period_desc}."
             nxt = "No pending order fulfillment actions required for this period."
             return (

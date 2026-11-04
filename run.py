@@ -51,7 +51,15 @@ async def main():
         print(f"Starting BizOps Agent Web UI on http://{HOST}:{PORT}...")
         config = uvicorn.Config("ui.app:app", host=HOST, port=PORT, reload=False)
         server = uvicorn.Server(config)
-        await server.serve()
+        try:
+            await server.serve()
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            # Graceful shutdown: Uvicorn captures Ctrl+C/SIGINT, completes lifespan cleanup,
+            # and re-emits the signal on exit, which cancels the runner task.
+            # Only treat as a clean exit if Uvicorn initiated shutdown (server.should_exit is True).
+            # If cancellation occurred unexpectedly while running, re-raise it.
+            if not getattr(server, "should_exit", False):
+                raise
         return
 
     # 2. Safety check for --auto-confirm
@@ -125,4 +133,7 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
